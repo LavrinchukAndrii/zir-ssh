@@ -160,7 +160,7 @@ def page_html() -> str:
     folder = resources.files("zir").joinpath("assets/term")
     css = folder.joinpath("xterm.css").read_text(encoding="utf-8")
     scripts = "\n".join(
-        f"<script>\n{folder.joinpath(name).read_text(encoding="utf-8")}\n</script>" for name in _SCRIPTS
+        f"<script>\n{folder.joinpath(name).read_text(encoding='utf-8')}\n</script>" for name in _SCRIPTS
     )
     html = folder.joinpath("index.html").read_text(encoding="utf-8")
     return html.replace("/*XTERM_CSS*/", css).replace("<!--XTERM_SCRIPTS-->", scripts)
