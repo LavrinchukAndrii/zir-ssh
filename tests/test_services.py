@@ -85,6 +85,7 @@ def _find_logs(conf: Path, extra: str = "") -> WebTraffic:
     return web
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="the probe runs on Linux servers; Git's sh does not know C:\\ paths")
 def test_access_logs_with_custom_names_are_found_through_the_config(tmp_path):
     logs = tmp_path / "logs"
     (logs / "wms01").mkdir(parents=True)
