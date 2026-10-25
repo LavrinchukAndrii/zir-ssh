@@ -20,7 +20,7 @@ First public release.
 - Adding your SSH key to password-only servers; optional database access via `~/.my.cnf`.
 - Ukrainian and English interface.
 - `--report` / `--report --json` one-shot reports; `--demo` mode without any servers.
-- Builds for macOS (`.app` in a `.dmg`), Linux (x86_64, arm64) and Windows.
+- Builds for macOS on Apple Silicon (`.app` in a `.dmg`), Linux (x86_64, arm64) and Windows.
 
 [Unreleased]: https://github.com/LavrinchukAndrii/zir-ssh/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/LavrinchukAndrii/zir-ssh/releases/tag/v0.1.0

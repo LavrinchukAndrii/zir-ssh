@@ -96,13 +96,14 @@ Zir SSH під'єднується до серверів звичайним SSH (
 
 | Система | Файл |
 |---|---|
-| macOS (Apple Silicon / Intel) | `zir-macos-arm64.dmg` / `zir-macos-x86_64.dmg` |
+| macOS на Apple Silicon (M1 і новіші) | `zir-macos-arm64.dmg` |
 | Windows 10/11 | `zir-windows-x86_64.exe` |
 | Linux x86_64 / ARM64 (glibc 2.35+) | `zir-linux-x86_64` / `zir-linux-arm64` |
 
 - **macOS:** відкрийте `.dmg` і перетягніть `zir.app` у «Програми». Програма поки не підписана
   сертифікатом Apple, тому вперше відкрийте її правим кліком → «Відкрити»
   (або `xattr -dr com.apple.quarantine /Applications/zir.app`).
+  Mac з процесором Intel не підтримуються: Apple припинила їх випуск, а macOS 26 — остання версія для них.
 - **Windows:** потрібен вбудований OpenSSH Client (Параметри → Додаткові компоненти). Запускайте у Windows Terminal.
 - **Linux:** `chmod +x zir-linux-x86_64`; `zir --install-desktop` додає програму з іконкою в меню застосунків.
 

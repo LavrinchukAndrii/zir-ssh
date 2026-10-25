@@ -7,8 +7,7 @@
 | Файл | Система | Що це | Як запускати |
 |---|---|---|---|
 | `zir-macos-arm64.dmg` | macOS, Apple Silicon (M1–M4) | `zir.app` з іконкою | відкрити `.dmg`, перетягнути `zir.app` в «Програми», запускати з Launchpad / Finder |
-| `zir-macos-x86_64.dmg` | macOS, Intel | те саме | те саме |
-| `zir-macos-arm64`, `zir-macos-x86_64` | macOS | один виконуваний файл без іконки | у терміналі: `./zir-macos-arm64` |
+| `zir-macos-arm64` | macOS, Apple Silicon | один виконуваний файл без іконки | у терміналі: `./zir-macos-arm64` |
 | `zir-windows-x86_64.exe` | Windows 10/11 | один `.exe` з іконкою | подвійний клік або запуск із Windows Terminal |
 | `zir-linux-x86_64` | Linux x86_64, glibc ≥ 2.35 | один виконуваний файл | `chmod +x` і запуск у терміналі; `--install-desktop` додає іконку в меню |
 | `zir-linux-arm64` | Linux ARM64 (Raspberry Pi 4/5, Graviton) | те саме | те саме |
@@ -20,7 +19,7 @@
 
 ```sh
 make build        # збірка для цього комп'ютера  -> dist/
-make build-all    # усі 7 файлів через GitHub Actions -> dist/
+make build-all    # усі 5 файлів через GitHub Actions -> dist/
 make test         # тести
 ```
 
@@ -63,7 +62,6 @@ dist/zir-macos-arm64.dmg    14.5 MiB
 | `ubuntu-22.04` | `zir-linux-x86_64` |
 | `ubuntu-22.04-arm` | `zir-linux-arm64` |
 | `macos-14` | `zir-macos-arm64`, `zir-macos-arm64.dmg` |
-| `macos-13` | `zir-macos-x86_64`, `zir-macos-x86_64.dmg` |
 | `windows-2022` | `zir-windows-x86_64.exe` |
 
 На кожній машині спершу проходять тести, потім збірка зі smoke-тестом. Скрипт дочікується кінця, завантажує всі файли в `dist/` і рахує `SHA256SUMS`.
@@ -90,7 +88,7 @@ git tag v0.1.0 && git push origin v0.1.0
 
 ### macOS
 
-1. Відкрити `zir-macos-arm64.dmg` (Intel: `x86_64`) і перетягнути `zir.app` в «Програми».
+1. Відкрити `zir-macos-arm64.dmg` і перетягнути `zir.app` в «Програми».
 2. Перший запуск: файл не підписаний сертифікатом Apple, тому macOS його заблокує. Є два способи обійти:
    - у Finder клацнути правою кнопкою на `zir.app` і вибрати «Відкрити», потім «Відкрити»;
    - або виконати в терміналі `xattr -dr com.apple.quarantine /Applications/zir.app`.
@@ -158,7 +156,7 @@ packaging/icons/              готові іконки
 packaging/dmg_settings.py     вигляд вікна .dmg для dmgbuild: розмір, позиції іконок, фон
 packaging/make_dmg_background.py  генератор фону вікна .dmg
 packaging/dmg/background.tiff     готовий фон (1x + Retina 2x)
-.github/workflows/build.yml   збірка на 5 машинах і реліз за тегом
+.github/workflows/build.yml   збірка на 4 машинах і реліз за тегом
 ```
 
 ## Тестовий сервер у Docker
@@ -180,6 +178,7 @@ docker run -d --name zir-testhost -p 127.0.0.1:2222:22 -p 127.0.0.1:8088:80 \
 
 ## Відомі обмеження
 
+- **Немає версії для Mac з Intel.** Apple припинила випуск таких комп'ютерів, а macOS 26 — остання версія для них, тому збирається лише Apple Silicon (`arm64`). Зібрати для Intel вручну можна на Mac з Intel командою `make build`.
 - **Немає крос-компіляції.** Кожна система збирається на своїй машині, саме тому існує `make build-all`.
 - **Немає підпису Apple або Microsoft.** Звідси попередження Gatekeeper і SmartScreen. Щоб їх прибрати, потрібен Apple Developer ID (99 $/рік) з нотаризацією і сертифікат для Windows.
 - **Linux потребує glibc ≥ 2.35** (Ubuntu 22.04+, Debian 12+, RHEL 9+). Для старших систем треба збирати на старішому образі.

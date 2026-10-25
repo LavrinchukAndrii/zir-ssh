@@ -97,13 +97,14 @@ Grab the file for your system from [Releases](https://github.com/LavrinchukAndri
 
 | System | File |
 |---|---|
-| macOS (Apple Silicon / Intel) | `zir-macos-arm64.dmg` / `zir-macos-x86_64.dmg` |
+| macOS on Apple Silicon (M1 and newer) | `zir-macos-arm64.dmg` |
 | Windows 10/11 | `zir-windows-x86_64.exe` |
 | Linux x86_64 / ARM64 (glibc 2.35+) | `zir-linux-x86_64` / `zir-linux-arm64` |
 
 - **macOS:** open the `.dmg` and drag `zir.app` to Applications. The app is not signed with an
   Apple certificate yet, so the first time right-click it → Open
   (or `xattr -dr com.apple.quarantine /Applications/zir.app`).
+  Intel Macs are not supported: Apple has ended the Intel line, and macOS 26 is the last version for it.
 - **Windows:** needs the built-in OpenSSH Client (Settings → Optional features). Run it in Windows Terminal.
 - **Linux:** `chmod +x zir-linux-x86_64`; `zir --install-desktop` adds it with its icon to the app menu.
 
