@@ -510,38 +510,38 @@ class HostView(StackSections, Vertical):
         self._q("#gauges", Static).update(gauges)
 
         info = Text()
-        info.append(f"{_("host"):<12}", style="grey50")
+        info.append(f"{_('host'):<12}", style="grey50")
         info.append(snapshot.hostname, style="bold")
         if snapshot.ip:
             info.append(f"  {snapshot.ip}", style="grey70")
         info.append("\n")
-        info.append(f"{_("os"):<12}", style="grey50")
+        info.append(f"{_('os'):<12}", style="grey50")
         info.append(snapshot.os)
         info.append("\n")
-        info.append(f"{_("kernel"):<12}", style="grey50")
+        info.append(f"{_('kernel'):<12}", style="grey50")
         info.append(snapshot.kernel)
         info.append("\n")
-        info.append(f"{_("uptime"):<12}", style="grey50")
+        info.append(f"{_('uptime'):<12}", style="grey50")
         info.append(human_uptime(snapshot.uptime))
         info.append(
             "  " + _("(boot {at})", at=time.strftime('%Y-%m-%d %H:%M', time.localtime(snapshot.boot_time))),
             style="grey70",
         )
         info.append("\n")
-        info.append(f"{_("activity"):<12}", style="grey50")
+        info.append(f"{_('activity'):<12}", style="grey50")
         info.append(
             _n("{n} process", "{n} processes", snapshot.procs_total) + " · "
             + _n("{n} service", "{n} services", snapshot.running_services) + " · "
             + _n("{n} logged in", "{n} logged in", len(snapshot.who))
         )
         info.append("\n")
-        info.append(f"{_("docker"):<12}", style="grey50")
+        info.append(f"{_('docker'):<12}", style="grey50")
         info.append(
             _n("{n} running", "{n} running", len(snapshot.docker)) if snapshot.docker
             else _("not installed / not running")
         )
         info.append("\n")
-        info.append(f"{_("sampled"):<12}", style="grey50")
+        info.append(f"{_('sampled'):<12}", style="grey50")
         info.append(f"{time.strftime('%H:%M:%S', time.localtime(reading.at))}")
         info.append(f" · {human_ms(reading.latency)}", style="grey70")
         if self.state.paused:
