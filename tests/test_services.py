@@ -70,11 +70,19 @@ def test_next_probe_continues_from_saved_offsets():
 
 
 def _find_logs(conf: Path, extra: str = "") -> WebTraffic:
-    """Run only the `sec weblogs` part of the probe against a fake web server config."""
+    """Run only the `sec weblogs` part of the probe against a fake web server config.
+
+    The probe also looks in the usual places (/var/log/nginx, /var/log/apache2…), which exist on
+    machines with a real web server (GitHub runners have both), so only the test's own files count.
+    """
     part = STACK_SCRIPT[STACK_SCRIPT.index("sec weblogs"):STACK_SCRIPT.index("sec webtraffic")]
     header = f"sec() {{ :; }}\nZIR_WEBCONF={shlex.quote(str(conf))}\nZIR_EXTRA_LOGS={shlex.quote(extra)}\n"
     out = subprocess.run(["sh", "-c", header + part], capture_output=True, text=True).stdout
-    return parse_stack({"weblogs": out.splitlines()}).web
+    web = parse_stack({"weblogs": out.splitlines()}).web
+    root = f"{conf.parent}/"
+    web.files = [f for f in web.files if f.path.startswith(root)]
+    web.unreadable = [path for path in web.unreadable if path.startswith(root)]
+    return web
 
 
 def test_access_logs_with_custom_names_are_found_through_the_config(tmp_path):

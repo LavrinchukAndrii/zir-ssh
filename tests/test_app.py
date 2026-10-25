@@ -314,6 +314,9 @@ def test_copy_table_row_and_mouse_selection(monkeypatch):
                 if table.row_count:
                     break
                 await pilot.pause(0.1)
+            # Freeze the demo data: a poll between copying and reading the row would change it.
+            app.action_pause_host()
+            await pilot.pause(0.5)
             table.focus()
             await pilot.press("ctrl+c")
             first = "\t".join(str(getattr(c, "plain", c)).strip() for c in table.get_row_at(0))
