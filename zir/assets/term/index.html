@@ -1,0 +1,90 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Zir SSH</title>
+<style>
+/*XTERM_CSS*/
+html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+#term { position: absolute; inset: 4px; }
+</style>
+</head>
+<body>
+<div id="term"></div>
+<!--XTERM_SCRIPTS-->
+<script>
+const term = new Terminal({
+  macOptionIsMeta: true,  // Alt+T / Alt+W reach zir instead of typing † and ∑
+  fontFamily: "Menlo, monospace",
+  fontSize: 13,
+  // Block characters (the bars of the gauges) from the font, as Terminal.app draws
+  // them: xterm.js's own glyphs fill the whole cell and the rows run together.
+  customGlyphs: false,
+  lineHeight: 1.1,
+  allowProposedApi: true,
+  scrollback: 0,
+  theme: { background: "#000000" },
+});
+const fit = new FitAddon.FitAddon();
+term.loadAddon(fit);
+term.loadAddon(new Unicode11Addon.Unicode11Addon());
+term.unicode.activeVersion = "11";
+term.open(document.getElementById("term"));
+try {
+  term.loadAddon(new WebglAddon.WebglAddon());
+} catch (e) {
+  // no WebGL: the DOM renderer is slower but works
+}
+fit.fit();
+term.focus();
+
+// The Python side writes the program's output here.
+window.zirWrite = (data) => term.write(data);
+
+// pywebview runs every API call in its own thread, so input goes one call at
+// a time: otherwise fast typing could arrive out of order.
+let pending = "";
+let sending = false;
+function send(data) {
+  pending += data;
+  if (sending) return;
+  sending = true;
+  const chunk = pending;
+  pending = "";
+  pywebview.api.input(chunk).finally(() => {
+    sending = false;
+    if (pending) send("");
+  });
+}
+
+// The window settles its size a moment after it opens. zir starts only once
+// the size has stopped changing: output drawn for a taller grid would scroll
+// the screen and leave its top rows garbled.
+let started = false;
+let settle = null;
+function fitLater() {
+  clearTimeout(settle);
+  settle = setTimeout(() => {
+    fit.fit();
+    if (started) {
+      pywebview.api.resize(term.cols, term.rows);
+    } else {
+      started = true;
+      pywebview.api.ready(term.cols, term.rows);
+    }
+  }, 150);
+}
+let listening = false;
+function start() {
+  if (listening) return;
+  listening = true;
+  term.onData(send);
+  term.onBinary(send);
+  new ResizeObserver(fitLater).observe(document.getElementById("term"));
+  fitLater();
+}
+if (window.pywebview && window.pywebview.api && window.pywebview.api.ready) start();
+else window.addEventListener("pywebviewready", start);
+</script>
+</body>
+</html>

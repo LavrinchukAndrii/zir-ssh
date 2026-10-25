@@ -1,0 +1,203 @@
+
+__SEC__meta
+hostname=67c311e2446f
+os=Debian GNU/Linux 12 (bookworm)
+kernel=Linux 7.0.14-linuxkit
+uptime=1307.38
+cpus=8
+ip=172.17.0.2
+init=sshd
+
+__SEC__load
+0.07 0.02 0.00 1/275 1859
+
+__SEC__cpu
+cpu  1837 0 924 1042344 263 0 729 0 0 0
+
+__SEC__mem
+MemTotal:        4010356 kB
+MemFree:         1537572 kB
+MemAvailable:    3257996 kB
+Buffers:           43952 kB
+Cached:          1771512 kB
+SwapCached:            0 kB
+Active:           709936 kB
+Inactive:        1469772 kB
+Active(anon):     367232 kB
+Inactive(anon):        0 kB
+Active(file):     342704 kB
+Inactive(file):  1469772 kB
+Unevictable:           0 kB
+Mlocked:               0 kB
+SwapTotal:       1048572 kB
+SwapFree:        1048572 kB
+Zswap:                 0 kB
+Zswapped:              0 kB
+Dirty:               120 kB
+Writeback:             0 kB
+AnonPages:        358472 kB
+Mapped:           218328 kB
+Shmem:              3004 kB
+KReclaimable:      77616 kB
+Slab:             118368 kB
+SReclaimable:      77616 kB
+SUnreclaim:        40752 kB
+KernelStack:        4528 kB
+PageTables:         5524 kB
+SecPageTables:         0 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:     3053748 kB
+Committed_AS:    1882312 kB
+VmallocTotal:   135288315904 kB
+VmallocUsed:       11408 kB
+VmallocChunk:          0 kB
+Percpu:             2368 kB
+AnonHugePages:    243712 kB
+ShmemHugePages:        0 kB
+ShmemPmdMapped:        0 kB
+FileHugePages:     90112 kB
+FilePmdMapped:         0 kB
+Balloon:               0 kB
+HugePages_Total:       0
+HugePages_Free:        0
+HugePages_Rsvd:        0
+HugePages_Surp:        0
+Hugepagesize:       2048 kB
+Hugetlb:               0 kB
+
+__SEC__disk
+Filesystem                 1-blocks         Used    Available Capacity Mounted on
+overlay                 62671097856   6398312448  53056069632      11% /
+/dev/vda1               62671097856   6398312448  53056069632      11% /etc/hosts
+/run/host_mark/private 994610155520 220466155520 774144000000      23% /root/.ssh/authorized_keys
+
+__SEC__inode
+Filesystem                 Inodes   IUsed      IFree IUse% Mounted on
+overlay                   3907584   99500    3808084    3% /
+/dev/vda1                 3907584   99500    3808084    3% /etc/hosts
+/run/host_mark/private 3290997046 1832142 3289164904    1% /root/.ssh/authorized_keys
+
+__SEC__net
+Inter-|   Receive                                                |  Transmit
+ face |bytes    packets errs drop fifo frame compressed multicast|bytes    packets errs drop fifo colls carrier compressed
+    lo:       0       0    0    0    0     0          0         0        0       0    0    0    0     0       0          0
+ tunl0:       0       0    0    0    0     0          0         0        0       0    0    0    0     0       0          0
+  gre0:       0       0    0    0    0     0          0         0        0       0    0    0    0     0       0          0
+gretap0:       0       0    0    0    0     0          0         0        0       0    0    0    0     0       0          0
+erspan0:       0       0    0    0    0     0          0         0        0       0    0    0    0     0       0          0
+ip_vti0:       0       0    0    0    0     0          0         0        0       0    0    0    0     0       0          0
+ip6_vti0:       0       0    0    0    0     0          0         0        0       0    0    0    0     0       0          0
+  sit0:       0       0    0    0    0     0          0         0        0       0    0    0    0     0       0          0
+ip6tnl0:       0       0    0    0    0     0          0         0        0       0    0    0    0     0       0          0
+ip6gre0:       0       0    0    0    0     0          0         0        0       0    0    0    0     0       0          0
+  eth0: 1754890   19044    0    0    0     0          0         0  1875009   13566    0    0    0     0       0          0
+
+__SEC__procs
+    127 mysql     0.0  3.5 144368      19:53 Sl   mariadbd        /usr/sbin/mariadbd --basedir=/usr --datadir=/var/lib/mysql --plugin-dir=/usr/lib/mysql/plugin --user=mysql --skip-log-error --pid-file=/run/mysqld/mysqld.pid --socket=/run/mysqld/mysqld.sock
+    191 www-data  0.0  0.3 12896       19:52 S    php-fpm8.2      php-fpm: pool www
+    190 www-data  0.0  0.3 13516       19:52 S    php-fpm8.2      php-fpm: pool www
+    189 root      0.0  0.2  8660       19:52 Ss   php-fpm8.2      php-fpm: master process (/etc/php/8.2/fpm/php-fpm.conf)
+    205 www-data  0.0  0.1  4072       19:52 S    nginx           nginx: worker process
+    206 www-data  0.0  0.0  3988       19:52 S    nginx           nginx: worker process
+    207 www-data  0.0  0.0  3892       19:52 S    nginx           nginx: worker process
+    208 www-data  0.0  0.1  4072       19:52 S    nginx           nginx: worker process
+    210 www-data  0.0  0.1  4072       19:52 R    nginx           nginx: worker process
+    211 www-data  0.0  0.1  4072       19:52 S    nginx           nginx: worker process
+    212 www-data  0.0  0.1  4072       19:52 S    nginx           nginx: worker process
+    209 www-data  0.0  0.1  4072       19:52 S    nginx           nginx: worker process
+      1 root      0.0  0.2  8888       19:53 Ss   sshd            sshd: /usr/sbin/sshd -D -e [listener] 0 of 10-100 startups
+     32 root      0.0  0.0  1468       19:53 S    mysqld_safe     /bin/sh /usr/bin/mysqld_safe
+    128 root      0.0  0.0  2220       19:53 S    logger          logger -t mysqld -p daemon error
+    204 root      0.0  0.0  1628       19:52 Ss   nginx           nginx: master process /usr/sbin/nginx
+   1839 root      0.0  0.2  9752       00:00 Ss   sshd            sshd: root@notty
+   1845 root      0.0  0.0  2812       00:00 Ss   bash            bash -s
+   1865 root      0.0  0.0  3952       00:00 R    ps              ps -eo pid=,user=,pcpu=,pmem=,rss=,etime=,stat=,comm=,args= --sort=-pcpu
+   1866 root      0.0  0.0  1052       00:00 S    head            head -n 30
+
+__SEC__procs_total
+20
+
+__SEC__services_failed
+
+__SEC__services_running
+0
+
+__SEC__logs
+-- No entries --
+
+__SEC__docker
+
+__SEC__who
+
+__SEC__listen
+Netid State  Recv-Q Send-Q Local Address:Port Peer Address:PortProcess                        
+tcp   LISTEN 0      128          0.0.0.0:22        0.0.0.0:*    users:(("sshd",pid=1,fd=3))   
+tcp   LISTEN 0      511          0.0.0.0:80        0.0.0.0:*    users:(("nginx",pid=204,fd=5))
+tcp   LISTEN 0      80         127.0.0.1:3306      0.0.0.0:*                                  
+tcp   LISTEN 0      128             [::]:22           [::]:*    users:(("sshd",pid=1,fd=4))   
+
+__SEC__stack_procs
+nginx|nginx|9|0.31|34754560|0
+php-fpm|master|1|0.08|8867840|0
+db|mariadbd|1|0.98|147832832|0
+php-fpm|www|2|0.33|27045888|0
+
+__SEC__php_pools
+www|4|dynamic
+
+__SEC__php_warnings
+
+__SEC__weblogs
+F|1|99330|278881|27968|27968|/var/log/nginx/access.log
+
+__SEC__webtraffic
+I|304|172.17.0.1
+P|304|1
+S|152|2
+S|152|4
+T|304|152
+U|152|/xmlrpc.php
+U|38|/p0
+U|38|/p1
+U|38|/p2
+U|38|/p3
+
+__SEC__tcp
+LISTEN|4
+ESTAB|1
+
+__SEC__tcp_peers
+W|0
+C|1|172.17.0.1
+
+__SEC__conntrack
+0
+65536
+
+__SEC__synflood
+0
+
+__SEC__mysql
+Aborted_connects	0
+Com_delete	0
+Com_insert	1801
+Com_select	1824
+Com_update	0
+Connections	1854
+Created_tmp_disk_tables	40
+Innodb_buffer_pool_read_requests	39341
+Innodb_buffer_pool_reads	170
+Innodb_row_lock_waits	0
+Max_used_connections	2
+Questions	5526
+Slow_queries	0
+Threads_connected	1
+Threads_running	1
+Uptime	1193
+max_connections	151
+version	10.11.19-MariaDB-0+deb12u1
+version_comment	Debian 12
+
+__SEC__mysql_queries

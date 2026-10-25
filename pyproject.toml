@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "zir"
+version = "0.1.0"
+description = "Multi-host, read-only server overview for your terminal"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "PolyForm-Noncommercial-1.0.0"
+license-files = ["LICENSE"]
+authors = [{ name = "Lavrinchuk Andrii", email = "lavrinchuk.a@gmail.com" }]
+keywords = ["ssh", "monitoring", "tui", "terminal", "server", "dashboard", "nginx", "mysql", "php-fpm", "textual"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Intended Audience :: System Administrators",
+  "Intended Audience :: Developers",
+  "Natural Language :: English",
+  "Natural Language :: Ukrainian",
+  "Operating System :: MacOS",
+  "Operating System :: POSIX :: Linux",
+  "Operating System :: Microsoft :: Windows",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: System :: Monitoring",
+  "Topic :: System :: Systems Administration",
+]
+dependencies = [
+  "textual>=1.0",
+  "rich>=13.7",
+  "platformdirs>=4.0",
+  "pyte>=0.8",
+  "cryptography>=42",
+  "ptyprocess>=0.7; sys_platform != 'win32'",
+  "pywebview>=5.0; sys_platform == 'darwin'",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+build = ["pyinstaller>=6.10", "dmgbuild>=1.6; sys_platform == 'darwin'"]
+icon = ["pillow>=10"]
+
+[project.urls]
+Homepage = "https://github.com/LavrinchukAndrii/zir-ssh"
+Issues = "https://github.com/LavrinchukAndrii/zir-ssh/issues"
+Changelog = "https://github.com/LavrinchukAndrii/zir-ssh/blob/main/CHANGELOG.md"
+
+[project.scripts]
+zir = "zir.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["zir*"]
+
+[tool.setuptools.package-data]
+zir = ["assets/*.png", "assets/term/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

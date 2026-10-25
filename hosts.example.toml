@@ -1,0 +1,33 @@
+# Copy to ~/.config/zir/hosts.toml
+# (Windows: %APPDATA%\zir\hosts.toml)
+
+[settings]
+interval = 2.0                # seconds between polls of the visible tab
+hidden_interval_factor = 3    # background tabs poll 3x less often
+timeout = 8.0                 # whole probe, seconds
+connect_timeout = 5           # SSH connect, seconds
+max_parallel = 8              # SSH sessions at the same time
+# language = "uk"             # "uk" (default) or "en"; F2 in the app saves the choice to prefs.json
+
+# Short form: name = "ssh destination"
+[hosts]
+web-1 = "deploy@10.0.0.5"
+
+[hosts.db-1]
+title = "Database (production)"  # human name shown in tabs and Fleet
+target = "db-1"               # alias from ~/.ssh/config
+tags = ["prod", "db"]
+interval = 5.0                # this host polls slower
+
+[hosts.edge-4]
+target = "root@203.0.113.4"
+port = 2222
+identity = "~/.ssh/edge_ed25519"
+tags = ["edge"]
+strict_host_key = "accept-new"
+web_logs = ["/srv/sites/*/logs/access.log"]   # access logs outside the usual places
+ssh_options = ["ProxyJump=bastion"]           # any extra `ssh -o` options
+
+[hosts.old-box]
+target = "old-box"
+enabled = false               # listed, but never polled (same as `d` in the app)

@@ -1,0 +1,21 @@
+name: Feature request
+description: An idea for something Zir SSH should show or do
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would it solve
+      description: What you are trying to see or do on your servers, and why the current version does not help.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Proposed solution
+      description: How it could look or work. Remember that monitoring is read-only by design.
+  - type: textarea
+    id: context
+    attributes:
+      label: Anything else
+      description: Software versions, example command output, screenshots of similar tools.
