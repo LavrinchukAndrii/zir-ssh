@@ -43,12 +43,12 @@ def _write_checked(path: Path, text: str) -> None:
         raise ConfigError(_("invalid TOML in {path}: {error}", path=path, error=exc)) from exc
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(".tmp")
-    tmp.write_text(text)
+    tmp.write_text(text, encoding="utf-8")
     os.replace(tmp, path)
 
 
 def add_host(path: Path, spec: HostSpec) -> None:
-    text = path.read_text() if path.exists() else (
+    text = path.read_text(encoding="utf-8") if path.exists() else (
         "# Zir SSH servers. See hosts.example.toml for all options.\n\n[settings]\ninterval = 2.0\n"
     )
     hosts = tomllib.loads(text).get("hosts", {}) if text.strip() else {}
@@ -63,7 +63,7 @@ def remove_host(path: Path, name: str) -> bool:
     """True if the host was found in the file and removed."""
     if not path.exists():
         return False
-    lines = path.read_text().splitlines(keepends=True)
+    lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
     header = re.compile(r"^\s*\[\s*hosts\s*\.\s*(\"(?:[^\"\\\\]|\\\\.)*\"|'[^']*'|[A-Za-z0-9_-]+)\s*\]\s*(#.*)?$")
     out: list[str] = []
     skipping = False

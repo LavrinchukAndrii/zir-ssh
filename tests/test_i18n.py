@@ -20,7 +20,7 @@ def _source_strings() -> tuple[set[str], set[str]]:
     for path in SOURCE.rglob("*.py"):
         if path.name == "locale_uk.py":
             continue
-        for node in ast.walk(ast.parse(path.read_text())):
+        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
             if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Name)):
                 continue
             first = node.args[0] if node.args else None
@@ -185,7 +185,7 @@ def test_underscore_is_never_assigned():
     """`x, _ = ...` in a function makes `_` local and breaks `_()` calls there."""
     offenders = []
     for path in SOURCE.rglob("*.py"):
-        for node in ast.walk(ast.parse(path.read_text())):
+        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
             if isinstance(node, ast.Name) and node.id == "_" and isinstance(node.ctx, ast.Store):
                 offenders.append(f"{path.name}:{node.lineno}")
     assert not offenders, "use a named throwaway instead of _: " + ", ".join(offenders)

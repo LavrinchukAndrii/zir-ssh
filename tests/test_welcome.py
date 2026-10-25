@@ -29,7 +29,7 @@ def test_save_hosts_round_trip(tmp_path):
 
     path = tmp_path / "zir" / "hosts.toml"
     save_hosts(path, hosts_from_args(["web-1", "root@10.0.0.7:2222"]))
-    tomllib.loads(path.read_text())
+    tomllib.loads(path.read_text(encoding="utf-8"))
     hosts, _ = load_config(path)
     assert [(h.name, h.target, h.port) for h in hosts] == [
         ("web-1", "web-1", None),

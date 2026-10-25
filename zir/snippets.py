@@ -265,7 +265,7 @@ def _path(host: str) -> Path:
 
 def load(host: str) -> dict | None:
     try:
-        data = json.loads(_path(host).read_text())
+        data = json.loads(_path(host).read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return None
     return data if isinstance(data, dict) and isinstance(data.get("facts"), dict) else None
@@ -276,7 +276,7 @@ def save(host: str, facts: dict) -> dict:
     path = _path(host)
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps(data, indent=2, ensure_ascii=False))
+        path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
     except OSError:
         pass
     return data

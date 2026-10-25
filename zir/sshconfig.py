@@ -36,7 +36,7 @@ def ssh_aliases(path: Path | None = None, _seen: set[Path] | None = None) -> lis
         if resolved in seen:
             return []
         seen.add(resolved)
-        lines = path.read_text(errors="replace").splitlines()
+        lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
     except OSError:
         return []
 

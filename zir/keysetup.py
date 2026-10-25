@@ -99,7 +99,7 @@ def answer_askpass() -> bool:
     if not path or len(sys.argv) != 2 or sys.argv[1].startswith("-"):
         return False
     try:
-        sys.stdout.write(Path(path).read_text())
+        sys.stdout.buffer.write(Path(path).read_bytes())  # UTF-8, as written below
         sys.stdout.flush()
     except OSError:
         pass
@@ -134,7 +134,7 @@ def _ssh_command(spec: HostSpec, connect_timeout: int) -> list[str]:
 async def install_key(
     spec: HostSpec, password: str, public_key: Path, timeout: float = 30.0, connect_timeout: int = 8
 ) -> None:
-    key_line = public_key.read_text().strip()
+    key_line = public_key.read_text(encoding="utf-8").strip()
     if not key_line:
         raise KeySetupError(_("{key} is empty", key=public_key))
 
@@ -145,7 +145,7 @@ async def install_key(
         os.chmod(workdir, 0o700)
         secret = workdir / "password"
         fd = os.open(secret, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-        with os.fdopen(fd, "w") as handle:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
             handle.write(password)
 
         env = {

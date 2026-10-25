@@ -1,5 +1,7 @@
 import sys
 
+import pytest
+
 from zir import desktop
 
 
@@ -7,7 +9,7 @@ def test_install_desktop_entry(tmp_path, monkeypatch):
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path))
     entry, icon = desktop.install_desktop_entry()
     assert icon.read_bytes()[:8] == b"\x89PNG\r\n\x1a\n"
-    text = entry.read_text()
+    text = entry.read_text(encoding="utf-8")
     assert "Terminal=true" in text
     assert f"Icon={icon}" in text
     assert "Exec=" in text
@@ -25,6 +27,7 @@ def test_resize_terminal(capsys):
     assert capsys.readouterr().out == "\x1b[8;51;197t"
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="closes a macOS Terminal window by its tty")
 def test_close_terminal_window(monkeypatch):
     calls = []
     monkeypatch.delenv("ZIR_TERMINAL", raising=False)

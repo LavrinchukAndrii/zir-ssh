@@ -15,7 +15,7 @@ def prefs_path() -> Path:
 
 def load_prefs(path: Path | None = None) -> dict:
     try:
-        data = json.loads((path or prefs_path()).read_text())
+        data = json.loads((path or prefs_path()).read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return {}
     return data if isinstance(data, dict) else {}
@@ -27,7 +27,7 @@ def save_prefs(updates: dict, path: Path | None = None) -> None:
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
         tmp = path.with_suffix(".tmp")
-        tmp.write_text(json.dumps(data, indent=2, ensure_ascii=False))
+        tmp.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
         os.replace(tmp, path)
     except OSError:
         pass

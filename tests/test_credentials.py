@@ -1,6 +1,7 @@
 """Identity cards: encrypted with this computer's SSH key."""
 
 import stat
+import sys
 
 import pytest
 
@@ -23,7 +24,8 @@ def test_round_trip_and_nothing_in_plain_text(ssh, tmp_path):
     save([Credential("root on debian", "root", "s3cret-пароль")], path)
     blob = path.read_bytes()
     assert b"s3cret" not in blob and b"root" not in blob
-    assert stat.S_IMODE(path.stat().st_mode) == 0o600
+    if sys.platform != "win32":  # Windows has no POSIX modes; the file lives in the user's own profile
+        assert stat.S_IMODE(path.stat().st_mode) == 0o600
     [card] = load(path)
     assert (card.name, card.login, card.password) == ("root on debian", "root", "s3cret-пароль")
 

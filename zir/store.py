@@ -161,7 +161,7 @@ class Session:
     def load(cls, path: Path | None = None) -> "Session":
         path = path or session_path()
         try:
-            data = json.loads(path.read_text())
+            data = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             return cls()
         if not isinstance(data, dict):
@@ -192,7 +192,7 @@ class Session:
         try:
             path.parent.mkdir(parents=True, exist_ok=True)
             tmp = path.with_suffix(".tmp")
-            tmp.write_text(json.dumps(payload, indent=2))
+            tmp.write_text(json.dumps(payload, indent=2), encoding="utf-8")
             os.replace(tmp, path)
         except OSError:
             pass  # losing the layout is not worth crashing the UI

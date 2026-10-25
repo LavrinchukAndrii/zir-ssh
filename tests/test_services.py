@@ -20,8 +20,8 @@ FIXTURES = Path(__file__).parent / "fixtures"
 
 
 def _snapshots():
-    first = parse_snapshot((FIXTURES / "probe1_debian12.txt").read_text())
-    second = parse_snapshot((FIXTURES / "probe2_debian12.txt").read_text())
+    first = parse_snapshot((FIXTURES / "probe1_debian12.txt").read_text(encoding="utf-8"))
+    second = parse_snapshot((FIXTURES / "probe2_debian12.txt").read_text(encoding="utf-8"))
     second.taken_at = first.taken_at + 2.0
     return first, second
 
@@ -79,7 +79,7 @@ def _find_logs(conf: Path, extra: str = "") -> WebTraffic:
     header = f"sec() {{ :; }}\nZIR_WEBCONF={shlex.quote(str(conf))}\nZIR_EXTRA_LOGS={shlex.quote(extra)}\n"
     out = subprocess.run(["sh", "-c", header + part], capture_output=True, text=True).stdout
     web = parse_stack({"weblogs": out.splitlines()}).web
-    root = f"{conf.parent}/"
+    root = str(conf.parent)
     web.files = [f for f in web.files if f.path.startswith(root)]
     web.unreadable = [path for path in web.unreadable if path.startswith(root)]
     return web

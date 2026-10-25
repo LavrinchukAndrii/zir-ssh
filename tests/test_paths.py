@@ -8,7 +8,7 @@ def test_legacy_config_moves_to_the_new_folder(tmp_path):
 
     migrate_legacy()
 
-    assert (config_dir() / "hosts.toml").read_text() == "[settings]\n"
+    assert (config_dir() / "hosts.toml").read_text(encoding="utf-8") == "[settings]\n"
     assert config_dir() == tmp_path / "config" / "zir"
     assert not old.exists()
 
@@ -23,5 +23,5 @@ def test_existing_new_folder_is_left_alone(tmp_path):
     migrate_legacy()
     migrate_legacy()
 
-    assert (config_dir() / "hosts.toml").read_text() == "new\n"
-    assert (old / "hosts.toml").read_text() == "old\n"
+    assert (config_dir() / "hosts.toml").read_text(encoding="utf-8") == "new\n"
+    assert (old / "hosts.toml").read_text(encoding="utf-8") == "old\n"

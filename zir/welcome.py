@@ -45,7 +45,7 @@ def save_hosts(path: Path, specs: list[HostSpec]) -> None:
         if spec.port:
             lines.append(f"port = {spec.port}")
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text("\n".join(lines) + "\n")
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 @localized

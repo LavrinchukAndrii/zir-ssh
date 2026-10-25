@@ -142,7 +142,8 @@ def install_desktop_entry() -> list[Path]:
         f"Icon={icon}\n"
         "Terminal=true\n"
         "Categories=System;Monitor;Network;\n"
-        "Keywords=ssh;server;monitoring;\n"
+        "Keywords=ssh;server;monitoring;\n",
+        encoding="utf-8",
     )
     entry.chmod(0o755)
     for tool in (["update-desktop-database", str(entry.parent)], ["gtk-update-icon-cache", "-q", str(data / "icons" / "hicolor")]):

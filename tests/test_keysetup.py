@@ -46,8 +46,8 @@ def test_install_key_with_password(fake_env):
     spec = HostSpec(name="h", target="root@203.0.113.10", port=2345)
     asyncio.run(keysetup.install_key(spec, "s3cret", key))
 
-    assert (tmp_path / "authorized_keys").read_text() == "ssh-ed25519 AAAATEST zir\n"
-    args = (tmp_path / "args").read_text()
+    assert (tmp_path / "authorized_keys").read_text(encoding="utf-8") == "ssh-ed25519 AAAATEST zir\n"
+    args = (tmp_path / "args").read_text(encoding="utf-8")
     assert "-p 2345" in args and "PubkeyAuthentication=no" in args
     assert "root@203.0.113.10" in args
     # The temporary password file and askpass helper are gone.
@@ -77,5 +77,5 @@ def test_public_key_lookup(tmp_path, monkeypatch):
 def test_generates_key_when_missing(tmp_path, monkeypatch):
     monkeypatch.setattr(keysetup, "ssh_dir", lambda: tmp_path / ".ssh")
     public, created = asyncio.run(keysetup.ensure_public_key(HostSpec(name="h", target="h")))
-    assert created and public.read_text().startswith("ssh-ed25519 ")
+    assert created and public.read_text(encoding="utf-8").startswith("ssh-ed25519 ")
     assert oct((tmp_path / ".ssh" / "id_ed25519").stat().st_mode & 0o777) == "0o600"

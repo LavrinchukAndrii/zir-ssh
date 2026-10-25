@@ -6,7 +6,7 @@ FIXTURES = Path(__file__).parent / "fixtures"
 
 
 def _facts():
-    return snippets.parse_facts((FIXTURES / "detect_debian12.txt").read_text())
+    return snippets.parse_facts((FIXTURES / "detect_debian12.txt").read_text(encoding="utf-8"))
 
 
 def test_detection_of_real_server():

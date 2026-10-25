@@ -134,7 +134,7 @@ def write_checksums() -> None:
         if path.is_file() and path.name.startswith("zir-"):
             digest = hashlib.sha256(path.read_bytes()).hexdigest()
             lines.append(f"{digest}  {path.name}")
-    (DIST / "SHA256SUMS").write_text("\n".join(lines) + "\n")
+    (DIST / "SHA256SUMS").write_text("\n".join(lines) + "\n", encoding="utf-8")
     print("\n".join(lines))
 
 
