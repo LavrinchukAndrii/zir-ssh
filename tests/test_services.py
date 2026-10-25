@@ -102,7 +102,7 @@ def test_access_logs_with_custom_names_are_found_through_the_config(tmp_path):
     assert paths == sorted([f"{logs}/access-wms01.log", f"{logs}/access-wms-dev.log", f"{logs}/wms01/requests.log"])
 
 
-@pytest.mark.skipif(os.geteuid() == 0, reason="root reads everything")
+@pytest.mark.skipif(sys.platform == "win32" or os.geteuid() == 0, reason="needs POSIX permissions and a non-root user")
 def test_unreadable_access_logs_are_reported(tmp_path):
     log = tmp_path / "access-wms01.log"
     log.write_text("x\n")
@@ -111,7 +111,7 @@ def test_unreadable_access_logs_are_reported(tmp_path):
     assert web.files == [] and web.unreadable == [str(log)]
 
 
-@pytest.mark.skipif(os.geteuid() == 0, reason="root reads everything")
+@pytest.mark.skipif(sys.platform == "win32" or os.geteuid() == 0, reason="needs POSIX permissions and a non-root user")
 def test_logs_in_a_closed_folder_are_reported_from_the_config(tmp_path):
     closed = tmp_path / "nginx-logs"
     closed.mkdir()
