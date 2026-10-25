@@ -21,8 +21,11 @@ def _lines(view: TerminalView) -> list[str]:
 async def _wait_for(predicate, timeout=6.0):
     end = asyncio.get_running_loop().time() + timeout
     while asyncio.get_running_loop().time() < end:
-        if predicate():
-            return True
+        try:
+            if predicate():
+                return True
+        except (AttributeError, LookupError):  # not built yet, e.g. the pty screen of a fresh session
+            pass
         await asyncio.sleep(0.1)
     return False
 

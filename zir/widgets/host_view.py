@@ -456,7 +456,11 @@ class HostView(StackSections, Vertical):
             "logs": self._render_logs,
         }.get(self.section)
         if renderer is not None:
-            renderer(reading)
+            try:
+                renderer(reading)
+            except NoMatches:  # the restored section's widgets are still mounting
+                self._rendered = None
+                self.call_after_refresh(self.refresh_data)
 
     @property
     def _bar_width(self) -> int:
