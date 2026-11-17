@@ -11,6 +11,7 @@ event loop's thread.
 from __future__ import annotations
 
 import asyncio
+import contextvars
 import importlib.util
 import os
 import sys
@@ -41,6 +42,9 @@ class PtySession:
         self.on_data = on_data
         self.on_exit = on_exit
         self.loop = asyncio.get_running_loop()
+        # Callbacks from the reader thread run in the starter's context (Textual's
+        # active app lives in a ContextVar; a bare thread does not have it).
+        self.context = contextvars.copy_context()
         self.exit_code: int | None = None
         self._closed = False
         self._spawn(command, rows, cols, env, cwd)
@@ -142,7 +146,7 @@ class PtySession:
 
         def _post(self, callback, *args) -> None:
             try:
-                self.loop.call_soon_threadsafe(callback, *args)
+                self.loop.call_soon_threadsafe(callback, *args, context=self.context)
             except RuntimeError:  # the app has closed its loop
                 pass
 
