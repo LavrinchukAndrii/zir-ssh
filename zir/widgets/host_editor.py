@@ -12,6 +12,7 @@ from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Select, Static
 
+from ..glyphs import plain
 from ..config import ConfigError, HostSpec
 from ..hosts_file import NAME_RE, parse_address, suggest_name
 from ..i18n import _, localized
@@ -146,12 +147,12 @@ class AddHostScreen(ModalScreen[HostSpec | None]):
         self._status(_("Connecting to {target}…", target=spec.target), "bold")
         ok, message = await self.check_runner(spec)
         if ok:
-            self._status("✓ " + _("Connected: {info}", info=message), "bold green")
+            self._status(plain("✓ ") + _("Connected: {info}", info=message), "bold green")
         elif "permission denied" in message.lower():
             self._status(_("The server answers but does not accept your key yet. Add it: Zir SSH will ask for the "
                            "password once."), "bold yellow")
         else:
-            self._status("✖ " + message, "bold red")
+            self._status(plain("✖ ") + message, "bold red")
 
     def action_cancel(self) -> None:
         self.dismiss(None)

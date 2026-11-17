@@ -6,6 +6,12 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Windows: the built-in terminal (SSH sessions and the Local tab) now works, through ConPTY; Local opens PowerShell.
+- Windows classic console: buttons, inputs, lists and icons no longer show "?" boxes; symbols the console
+  font lacks are replaced with ones it has (Windows Terminal keeps the originals).
+
 ## [0.2.0] - 2026-11-17
 
 ### Added

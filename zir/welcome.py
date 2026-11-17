@@ -18,6 +18,7 @@ from textual.widgets import Button, Checkbox, Footer, Header, Input, SelectionLi
 
 from .clipboard import ClipboardMixin
 from .config import HostSpec, hosts_from_args
+from .glyphs import HEADER_ICON
 from .i18n import _, localized
 from .sshconfig import SshAlias
 from .widgets.settings import RESTART, SettingsScreen
@@ -109,7 +110,7 @@ class WelcomeApp(ClipboardMixin, App[WelcomeResult | None]):
         self.config_path = config_path
 
     def compose(self) -> ComposeResult:
-        yield Header()
+        yield Header(icon=HEADER_ICON)
         with VerticalScroll(id="body"):
             yield Static(
                 Text.assemble(

@@ -10,6 +10,7 @@ from textual.containers import Vertical
 from textual.message import Message
 from textual.widgets import DataTable, Static
 
+from ..glyphs import plain
 from ..formatting import human_ms, human_rate, human_uptime, net_total_rate
 from ..i18n import _, _n
 from ..store import OFF, PENDING, HostStore
@@ -51,7 +52,7 @@ def _services_cell(services) -> Text:
     bad = [s for s in services if s.state in ("crit", "warn")]
     running = sum(1 for s in services if s.state == "ok")
     if not bad:
-        return Text(f"✓ {running}", style="green")
+        return Text(plain(f"✓ {running}"), style="green")
     first = bad[0]
     text = Text(("■ " if first.state == "crit" else "▲ ") + first.unit,
                 style="bold red" if first.state == "crit" else "yellow")

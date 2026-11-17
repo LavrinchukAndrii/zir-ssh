@@ -21,6 +21,7 @@ from .collector import Collector, ProbeError, build_collectors, interactive_comm
 from .config import DEFAULT_CONFIG, ConfigError, HostSpec, Settings
 from .credentials import Vault
 from .hosts_file import add_host, remove_host
+from .glyphs import HEADER_ICON
 from .i18n import _, localized
 from .keysetup import KeySetupError, ensure_public_key, install_key, public_key_for
 from .poller import HostWorker
@@ -307,7 +308,7 @@ class ZirApp(ClipboardMixin, App[str | None]):
         return TabPane(tab_label(state, time.time(), self.interval_of(name)), view, id=self.pane_ids[name])
 
     def compose(self) -> ComposeResult:
-        yield Header(show_clock=True)
+        yield Header(show_clock=True, icon=HEADER_ICON)
         active = self.session.active
         initial = self.pane_ids[active] if active in self.open_hosts else FLEET_PANE
         with TabbedContent(id="servers", initial=initial):

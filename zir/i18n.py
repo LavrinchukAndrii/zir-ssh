@@ -11,6 +11,7 @@ from __future__ import annotations
 import os
 from dataclasses import replace
 
+from .glyphs import plain
 from .locale_uk import UK, UK_PLURAL
 
 LANGUAGES = {"uk": "Українська", "en": "English"}
@@ -48,7 +49,7 @@ def env_language() -> str | None:
 def _(text: str, **values: object) -> str:
     if _current == "uk":
         text = UK.get(text, text)
-    return text.format(**values) if values else text
+    return plain(text.format(**values) if values else text)
 
 
 def _uk_form(n: int) -> int:
@@ -65,7 +66,7 @@ def _n(singular: str, plural: str, n: int, **values: object) -> str:
         text = UK_PLURAL[singular][_uk_form(abs(n))]
     else:
         text = singular if n == 1 else plural
-    return text.format(n=n, **values)
+    return plain(text.format(n=n, **values))
 
 
 # --------------------------------------------------------------------------

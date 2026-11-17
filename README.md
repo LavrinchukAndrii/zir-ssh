@@ -109,7 +109,9 @@ Grab the file for your system from [Releases](https://github.com/LavrinchukAndri
   Apple certificate yet, so the first time right-click it → Open
   (or `xattr -dr com.apple.quarantine /Applications/zir.app`).
   Intel Macs are not supported: Apple has ended the Intel line, and macOS 26 is the last version for it.
-- **Windows:** needs the built-in OpenSSH Client (Settings → Optional features). Run it in Windows Terminal.
+- **Windows:** needs the built-in OpenSSH Client (Settings → Optional features). Works in the classic console
+  too, Windows Terminal looks best. The built-in terminal uses ConPTY (Windows 10 1809 or newer); the
+  Local tab opens PowerShell.
 - **Linux:** `chmod +x zir-linux-x86_64`; `zir --install-desktop` adds it with its icon to the app menu.
 
 Checksums are in `SHA256SUMS` next to the files. More details: [docs/BUILD.md](docs/BUILD.md) (in Ukrainian).

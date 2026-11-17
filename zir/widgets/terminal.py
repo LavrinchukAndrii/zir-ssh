@@ -1,9 +1,10 @@
 """A real interactive SSH session inside a host tab.
 
-pyte emulates the terminal (xterm, 256 colours), ptyprocess runs `ssh -t` on a
-pseudo-terminal. Output is fed as it arrives, but the widget repaints at most
-60 times a second and only the lines that changed, so a busy `tail -f` does
-not slow the rest of the UI down. POSIX only (macOS, Linux) for now.
+pyte emulates the terminal (xterm, 256 colours), `ssh -t` runs on a
+pseudo-terminal (zir.ptysession: ptyprocess on macOS / Linux, ConPTY on
+Windows). Output is fed as it arrives, but the widget repaints at most 60 times
+a second and only the lines that changed, so a busy `tail -f` does not slow
+the rest of the UI down.
 
 Lines that scroll off the top are kept as plain text plus colour runs (not
 pyte's per-cell objects): 5000 lines of history cost a few MB, not ~90 MB.
@@ -11,13 +12,11 @@ pyte's per-cell objects): 5000 lines of history cost a few MB, not ~90 MB.
 
 from __future__ import annotations
 
-import asyncio
 import functools
 import importlib.util
 import math
 import os
 import re
-import sys
 from collections import deque
 
 from rich.segment import Segment
@@ -29,16 +28,12 @@ from textual.strip import Strip
 from textual.widget import Widget
 
 from ..clipboard import copy_text, paste_text
+from ..ptysession import BACKEND, PtySession
 
-# pyte and ptyprocess are imported on the first session (they are optional, and
-# most runs never open a terminal).
-SUPPORTED = (
-    sys.platform != "win32"
-    and importlib.util.find_spec("pyte") is not None
-    and importlib.util.find_spec("ptyprocess") is not None
-)
+# pyte and the pty library are imported on the first session (most runs never
+# open a terminal).
+SUPPORTED = BACKEND is not None and importlib.util.find_spec("pyte") is not None
 HISTORY = 5000  # lines of scrollback per session
-READ_SIZE = 16384  # bytes fed to the emulator per read: keeps each UI pause short
 DECCKM = 1 << 5  # pyte stores private mode 1 (application cursor keys) shifted by 5
 # Mouse tracking modes a remote program can switch on (also stored shifted by 5).
 MOUSE_CLICKS, MOUSE_DRAG, MOUSE_ANY, MOUSE_SGR = (m << 5 for m in (1000, 1002, 1003, 1006))
@@ -124,7 +119,6 @@ def freeze(line) -> tuple:
 @functools.cache
 def _pty():
     import pyte
-    from ptyprocess import PtyProcess
     from pyte.screens import Margins
 
     class ScrollbackScreen(pyte.Screen):
@@ -149,7 +143,7 @@ def _pty():
             super().reset()
             self.scrollback.clear()
 
-    return pyte, PtyProcess, ScrollbackScreen
+    return pyte, ScrollbackScreen
 
 
 def encode_mouse(button: int, x: int, y: int, press: bool, sgr: bool) -> str:
@@ -201,6 +195,10 @@ def encode_key(event: events.Key, app_cursor: bool) -> str | None:
     if event.character and event.is_printable:
         return event.character
     return None
+
+
+def _start_error(command: list[str], exc: Exception) -> str:
+    return f"[{command[0] if command else '?'}: {exc}]"
 
 
 class TerminalView(Widget, can_focus=True):
@@ -262,57 +260,41 @@ class TerminalView(Widget, can_focus=True):
     def start(self) -> None:
         if not SUPPORTED or self.running:
             return
-        pyte, PtyProcess, ScrollbackScreen = _pty()
+        pyte, ScrollbackScreen = _pty()
         cols, rows = max(self.size.width, 20), max(self.size.height, 5)
         self.screen_buf = ScrollbackScreen(cols, rows, HISTORY)
         self.stream = pyte.ByteStream(self.screen_buf)
         env = {**os.environ, "TERM": "xterm-256color", "COLORTERM": "truecolor"}
-        self.process = PtyProcess.spawn(self.command, dimensions=(rows, cols), env=env, cwd=self.cwd)
-        # ptyprocess sleeps 0.1 s after each signal and on close, on the UI thread.
-        self.process.delayafterterminate = self.process.delayafterclose = 0.01
+        try:
+            self.process = PtySession(self.command, rows, cols, env, self.cwd, self._output, self._ended)
+        except Exception as exc:  # noqa: BLE001 - e.g. ssh.exe missing: shown in the terminal
+            self.process = None
+            self.exit_code = None
+            self.note(_start_error(self.command, exc))
+            self.post_message(self.Exited(self, None))
+            return
         self.exit_code = None
         self._got_output = False
         self._offset = 0
         self._cursor_at = None
         self._strips.clear()
-        asyncio.get_running_loop().add_reader(self.process.fd, self._read)
         self.post_message(self.Started(self))
         self.refresh()
 
     def stop(self) -> None:
-        if self.process is None:
-            return
-        try:
-            asyncio.get_running_loop().remove_reader(self.process.fd)
-        except (RuntimeError, ValueError):
-            pass
         process, self.process = self.process, None
-        if process.isalive():
-            process.terminate(force=True)
-        try:
-            process.close(force=True)
-        except OSError:
-            pass
+        if process is not None:
+            process.stop()
 
     def on_unmount(self) -> None:
         self.stop()
 
-    def _read(self) -> None:
-        try:
-            data = os.read(self.process.fd, READ_SIZE)
-        except OSError:
-            data = b""
-        if not data:
-            asyncio.get_running_loop().remove_reader(self.process.fd)
-            self.process.wait()
-            self.exit_code = self.process.exitstatus
-            try:
-                self.process.close(force=True)
-            except OSError:
-                pass
-            self.process = None
-            self.post_message(self.Exited(self, self.exit_code))
-            return
+    def _ended(self, code: int | None) -> None:
+        self.process = None
+        self.exit_code = code
+        self.post_message(self.Exited(self, code))
+
+    def _output(self, data: bytes) -> None:
         self._feed(data)
         if not self._got_output:
             self._got_output = True
@@ -418,7 +400,7 @@ class TerminalView(Widget, can_focus=True):
 
     def write(self, text: str) -> None:
         if self.running:
-            os.write(self.process.fd, text.encode())
+            self.process.write(text)
 
     def note(self, text: str) -> None:
         """Print a dim line into the terminal (not sent to the server)."""
@@ -652,7 +634,7 @@ class TerminalView(Widget, can_focus=True):
         cols, rows = max(event.size.width, 20), max(event.size.height, 5)
         self.screen_buf.resize(rows, cols)
         if self.running:
-            self.process.setwinsize(rows, cols)
+            self.process.resize(rows, cols)
         self._offset = min(self._offset, len(self.screen_buf.scrollback))
         self._strips.clear()
 

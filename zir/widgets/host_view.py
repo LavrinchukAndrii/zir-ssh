@@ -24,6 +24,7 @@ from textual.widgets import (
     TabPane,
 )
 
+from ..glyphs import plain
 from ..collector import HostReading
 from ..formatting import human_bytes, human_ms, human_rate, human_uptime
 from ..i18n import _, _n
@@ -399,7 +400,7 @@ class HostView(StackSections, Vertical):
 
         if self.state.disabled:
             message.update(Text.assemble(
-                ("⊘ " + name, "bold grey70"), "\n\n",
+                (plain("⊘ ") + name, "bold grey70"), "\n\n",
                 _("This host is disabled: Zir SSH does not connect to it at all."), "\n",
                 (_("Press d to enable it again."), "bold cyan"),
             ))
@@ -413,7 +414,7 @@ class HostView(StackSections, Vertical):
 
         if reading.snapshot is None:
             text = Text()
-            text.append(f"✖ {name}\n\n", style="bold red")
+            text.append(plain("✖ ") + f"{name}\n\n", style="bold red")
             text.append(reading.error or _("no data"), style="red")
             if reading.hint:
                 text.append("\n\n" + reading.hint, style="grey70")
@@ -587,13 +588,13 @@ class HostView(StackSections, Vertical):
 
         text = Text()
         if not findings:
-            text.append("✓ " + _("all good") + "\n", style="bold green")
+            text.append(plain("✓ ") + _("all good") + "\n", style="bold green")
             text.append(_("No failed units, disks and memory below thresholds."), style="grey70")
             return text
 
         for finding in findings[:6]:
             color = "red" if finding.level == "crit" else "yellow"
-            mark = "✖" if finding.level == "crit" else "▲"
+            mark = plain("✖") if finding.level == "crit" else "▲"
             text.append(f"{mark} ", style=color)
             text.append(finding.message, style=f"bold {color}")
             text.append("\n")

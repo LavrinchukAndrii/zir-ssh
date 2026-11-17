@@ -10,7 +10,9 @@ from zir.prefs import load_prefs
 from zir.widgets.terminal import SUPPORTED, TerminalView
 from test_app import make_app
 
-pytestmark = pytest.mark.skipif(not SUPPORTED, reason="the built-in terminal needs a POSIX pty")
+# These sessions run POSIX shells (sh, printf, seq); Windows has test_terminal_windows.py.
+pytestmark = pytest.mark.skipif(not SUPPORTED or sys.platform == "win32",
+                                reason="POSIX shell sessions (macOS, Linux)")
 
 
 def _lines(view: TerminalView) -> list[str]:
@@ -343,7 +345,7 @@ def test_picker_opens_the_manager():
 def test_scrollback_keeps_lines_compactly():
     from zir.widgets.terminal import _pty, freeze
 
-    pyte, _pty_process, ScrollbackScreen = _pty()
+    pyte, ScrollbackScreen = _pty()
     screen = ScrollbackScreen(20, 3, history=100)
     pyte.ByteStream(screen).feed(b"".join(b"\x1b[31mred\x1b[0m %d\r\n" % n for n in range(10)))
     assert len(screen.scrollback) == 8

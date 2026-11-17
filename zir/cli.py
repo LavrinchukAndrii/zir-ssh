@@ -30,6 +30,7 @@ from .formatting import (
     SEVERITY_COLORS,
     SEVERITY_MARKS,
 )
+from .glyphs import adapt_textual
 from .i18n import DEFAULT_LANGUAGE, LANGUAGES, _, _n, env_language, normalize, set_language
 from .paths import migrate_legacy
 from .prefs import load_prefs
@@ -396,6 +397,7 @@ def main(argv: list[str] | None = None) -> int:
     if argv is None and answer_askpass():
         return 0
     migrate_legacy()
+    adapt_textual()  # the classic Windows console lacks Textual's border glyphs
     raw_args = argv if argv is not None else sys.argv[1:]
     set_language(pick_language(_early_lang(raw_args)))
     parser = build_parser()

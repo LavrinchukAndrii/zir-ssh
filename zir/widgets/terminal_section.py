@@ -8,6 +8,7 @@ from textual.content import Content
 from textual.containers import Horizontal, Vertical
 from textual.widgets import Button, Static, TabbedContent, TabPane
 
+from ..glyphs import plain
 from ..credentials import Vault
 from ..i18n import _
 from .credentials import MANAGE, CredentialPicker
@@ -42,7 +43,7 @@ class TerminalHint(Static):
 
     def on_resize(self) -> None:
         width = self.size.width
-        more = Content.assemble(" · ", ("ⓘ " + _("more"), "underline $accent"))
+        more = Content.assemble(" · ", (plain("ⓘ ") + _("more"), "underline $accent"))
         line = Content()
         for index, (key, what) in enumerate(HINTS):
             part = Content.assemble((" · " if index else ""), (_(key), "bold $text"), " ", _(what))

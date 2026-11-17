@@ -12,6 +12,7 @@ from textual.containers import Horizontal, VerticalScroll
 from textual.message import Message
 from textual.widgets import Button, DataTable, Static
 
+from ..glyphs import plain
 from ..collector import HostReading
 from ..formatting import human_bytes
 from ..i18n import _, _n
@@ -420,9 +421,9 @@ class StackSections:
             verdict.append(_("Signs of an attack or abuse:") + "\n", style="bold red")
             for finding in findings:
                 color = "red" if finding.level == "crit" else "yellow"
-                verdict.append(("✖ " if finding.level == "crit" else "▲ ") + finding.message + "\n", style=color)
+                verdict.append((plain("✖ ") if finding.level == "crit" else "▲ ") + finding.message + "\n", style=color)
         else:
-            verdict.append("✓ " + _("No signs of DDoS or brute force right now."), style="bold green")
+            verdict.append(plain("✓ ") + _("No signs of DDoS or brute force right now."), style="bold green")
         self._q("#atk-verdict", Static).update(verdict)
 
         used, limit = stack.conntrack

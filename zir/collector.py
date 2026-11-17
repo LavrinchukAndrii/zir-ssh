@@ -81,7 +81,10 @@ def _friendly_error(stderr: str) -> tuple[str, str]:
 
 
 def local_shell_command() -> list[str]:
-    """The user's own login shell on this computer."""
+    """The user's own login shell on this computer (PowerShell on Windows)."""
+    if sys.platform == "win32":
+        shell = shutil.which("pwsh") or shutil.which("powershell")
+        return [shell, "-NoLogo"] if shell else [os.environ.get("COMSPEC") or "cmd.exe"]
     return [os.environ.get("SHELL") or "/bin/bash", "-l"]
 
 
@@ -464,6 +467,8 @@ class DemoCollector:
     def terminal_command(self) -> list[str]:
         """Demo hosts do not exist: the terminal opens a local shell instead."""
         banner = _("Demo: this is a local shell on your computer, not {host}.", host=self.spec.name)
+        if sys.platform == "win32":
+            return local_shell_command()
         shell = os.environ.get("SHELL") or "/bin/sh"
         return ["/bin/sh", "-c", f'printf "\\033[2m%s\\033[0m\\n" "$1"; exec {shell}', "zir", banner]
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 from rich.text import Text
 from textual.content import Content
 
+from ..glyphs import plain
 from ..formatting import SEVERITY_COLORS
 from ..store import OFF, PENDING, HostState
 
@@ -14,7 +15,7 @@ BADGE_MARKS = {
     "crit": "■",     # ■
     "error": "×",    # ×
     PENDING: "·",    # ·
-    OFF: "⊘",        # disabled
+    OFF: plain("⊘"),        # disabled
 }
 BADGE_COLORS = {**SEVERITY_COLORS, PENDING: "grey50", OFF: "grey42"}
 STALE_MARK = "~"

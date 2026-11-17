@@ -5,7 +5,7 @@
 import os
 import sys
 
-from PyInstaller.utils.hooks import collect_data_files, collect_submodules
+from PyInstaller.utils.hooks import collect_data_files, collect_dynamic_libs, collect_submodules
 
 sys.path.insert(0, os.path.abspath(os.path.join(SPECPATH, "..")))
 from zir import __version__  # noqa: E402
@@ -59,9 +59,17 @@ else:
     # pywebview's local web server needs these; the single binary has no window.
     excludes += ["webview", "http.server", "socketserver"]
 
+binaries = []
+if sys.platform == "win32":
+    # The built-in terminal on Windows: ConPTY through pywinpty (its .pyd and DLLs).
+    hiddenimports += collect_submodules("winpty")
+    binaries += collect_dynamic_libs("winpty")
+    datas += collect_data_files("winpty")
+
 a = Analysis(
     [os.path.join(SPECPATH, "entry.py")],
     pathex=[root],
+    binaries=binaries,
     datas=datas,
     hiddenimports=hiddenimports,
     excludes=excludes,

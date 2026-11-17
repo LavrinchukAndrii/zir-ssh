@@ -6,8 +6,6 @@ Rendering is O(width × height) and only happens when data or size changes.
 
 from __future__ import annotations
 
-import os
-import sys
 from functools import lru_cache
 from typing import Callable, Sequence
 
@@ -15,11 +13,11 @@ from rich.style import Style
 from rich.text import Text
 from textual.widget import Widget
 
+from ..glyphs import LIMITED
+
 # The classic Windows console (conhost) fonts have only the half blocks ▄ ▀ █
 # and draw ▁▂▃▅▆▇▔ as "?" boxes; Windows Terminal (WT_SESSION) has them all.
-LIMITED_GLYPHS = sys.platform == "win32" and "WT_SESSION" not in os.environ
-
-if LIMITED_GLYPHS:
+if LIMITED:
     EIGHTHS = " ▄▄▄▄▄▄██"
     UPPER = {0: " ", 1: "▀", 2: "▀", 3: "▀", 4: "▀", 5: "▀", 6: "▀", 7: "█", 8: "█"}
     AVERAGE = "avg"

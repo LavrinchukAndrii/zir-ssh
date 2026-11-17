@@ -10,6 +10,7 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, Input, OptionList, Static
 from textual.widgets.option_list import Option
 
+from ..glyphs import plain
 from ..credentials import Credential, Vault, VaultError, private_keys
 from ..i18n import _, localized
 from ..keysetup import KeySetupError, create_default_key
@@ -129,7 +130,7 @@ class CredentialManager(ModalScreen[None]):
                     yield Static(_("Password"), classes="label")
                     with Horizontal(classes="pw-row"):
                         yield Input(password=True, id="cred-password")
-                        yield Button("👁", id="cred-reveal")
+                        yield Button(plain("👁"), id="cred-reveal")
             yield Static(id="cred-status")
             with Horizontal(id="cred-buttons"):
                 yield Button(_("New"), id="cred-new")
