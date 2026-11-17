@@ -10,7 +10,7 @@
 
 <p align="center">
   <a href="https://github.com/LavrinchukAndrii/zir-ssh/actions/workflows/tests.yml"><img src="https://github.com/LavrinchukAndrii/zir-ssh/actions/workflows/tests.yml/badge.svg" alt="Тести"></a>
-  <img src="https://img.shields.io/badge/version-0.2.0-blue" alt="Версія 0.2.0">
+  <img src="https://img.shields.io/badge/version-0.2.1-blue" alt="Версія 0.2.1">
   <img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="Python 3.11+">
   <img src="https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-lightgrey" alt="Платформи">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-PolyForm%20Noncommercial-orange" alt="Ліцензія PolyForm Noncommercial"></a>
