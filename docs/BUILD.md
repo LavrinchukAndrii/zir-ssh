@@ -61,7 +61,7 @@ dist/zir-macos-arm64.dmg    14.5 MiB
 |---|---|
 | `ubuntu-22.04` | `zir-linux-x86_64` |
 | `ubuntu-22.04-arm` | `zir-linux-arm64` |
-| `macos-14` | `zir-macos-arm64`, `zir-macos-arm64.dmg` |
+| `macos-latest` | `zir-macos-arm64`, `zir-macos-arm64.dmg` |
 | `windows-2022` | `zir-windows-x86_64.exe` |
 
 На кожній машині спершу проходять тести, потім збірка зі smoke-тестом. Скрипт дочікується кінця, завантажує всі файли в `dist/` і рахує `SHA256SUMS`.
