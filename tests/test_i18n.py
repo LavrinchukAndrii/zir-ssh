@@ -144,6 +144,16 @@ def _screen_text(app) -> str:
     return "\n".join(strip.text for strip in app.screen._compositor.render_strips())
 
 
+async def _screen_shows(app, *needles: str, timeout: float = 8.0) -> str:
+    """The screen text once it contains all `needles` (slow CI machines render late)."""
+    end = asyncio.get_running_loop().time() + timeout
+    while True:
+        text = _screen_text(app)
+        if all(needle in text for needle in needles) or asyncio.get_running_loop().time() > end:
+            return text
+        await asyncio.sleep(0.1)
+
+
 def test_ukrainian_ui_renders():
     set_language("uk")
     app = _demo_app()
@@ -224,7 +234,7 @@ def test_human_host_names_from_settings():
             await pilot.pause(0.5)
             assert app.store["web-1"].title == "Shop (production)"
             assert app.servers.get_tab(app.pane_ids["web-1"]).label.plain.startswith("Shop (production)")
-            text = _screen_text(app)
+            text = await _screen_shows(app, "Shop (production)", "web-1")
             assert "Shop (production)" in text and "web-1" in text  # technical name stays visible in Fleet
             assert app.is_running  # names apply without restarting the UI
 
