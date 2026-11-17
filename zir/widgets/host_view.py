@@ -293,7 +293,7 @@ class HostView(StackSections, Vertical):
             yield Static(id="logs-summary", classes="tab-head")
             yield RichLog(id="log-view", markup=False, wrap=True)
         elif section == "terminal":
-            yield TerminalSection(self.terminal_command, id="terminal")
+            yield TerminalSection(self.terminal_command, host=self.state.spec.name, id="terminal")
         elif section == "snippets":
             yield SnippetsSection(self.state.spec.name, self.check_runner, id="snippets")
 

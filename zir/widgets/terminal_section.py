@@ -11,15 +11,14 @@ from textual.widgets import Button, Static, TabbedContent, TabPane
 from ..credentials import Vault
 from ..i18n import _
 from .credentials import MANAGE, CredentialPicker
+from .snippet_manager import SnippetManager
+from .snippet_picker import MANAGE as MANAGE_SNIPPETS, SnippetPicker
 from .terminal import SUPPORTED, TerminalView
 
 
 # Most useful first: what does not fit the bar goes to the "ⓘ more" tooltip.
 HINTS = (
-    ("Alt+T", "new terminal"),
-    ("Alt+W", "close it"),
-    ("F6", "passwords"),
-    ("F3/F4", "sections"),
+    ("Ctrl+]", "menu: snippets, passwords, sections"),
     ("drag", "copy"),
     ("Shift+drag", "copy in mc/htop/vim"),
     ("double click", "word"),
@@ -69,10 +68,11 @@ class TerminalSection(Vertical):
     TerminalSection #term-empty { padding: 1 2; color: $text-muted; }
     """
 
-    def __init__(self, command: list[str], cwd: str | None = None, **kwargs) -> None:
+    def __init__(self, command: list[str], cwd: str | None = None, host: str | None = None, **kwargs) -> None:
         super().__init__(**kwargs)
         self.command = command
         self.cwd = cwd
+        self.host = host  # whose snippets the picker offers; None: the Local tab (shared ones only)
         self._counter = 0
 
     def compose(self) -> ComposeResult:
@@ -80,6 +80,7 @@ class TerminalSection(Vertical):
             yield Button(_("+ New terminal"), id="term-new", variant="primary")
             yield Button(_("✕ Close"), id="term-close")
             yield Button(_("🔑 Passwords"), id="term-passwords")
+            yield Button(_("📋 Snippets"), id="term-snippets")
             yield TerminalHint(id="term-hint")
         if not SUPPORTED:
             yield Static(
@@ -160,13 +161,26 @@ class TerminalSection(Vertical):
     def pick_credential(self, view: TerminalView) -> None:
         def done(choice) -> None:
             if choice == MANAGE:
-                self.app.action_credentials()
+                self.app.open_credentials()
             elif choice is not None and view.running:
                 view.submit_secret(choice.password)
             else:
                 view.focus()
 
         self.app.push_screen(CredentialPicker(self.vault), done)
+
+    # -- snippets ------------------------------------------------------------
+
+    def pick_snippet(self, view: TerminalView) -> None:
+        def done(choice: str | None) -> None:
+            if choice == MANAGE_SNIPPETS:
+                self.app.push_screen(SnippetManager(self.host), lambda _result: self.pick_snippet(view))
+            elif choice and view.is_attached:
+                view.paste(choice)
+            elif view.is_attached:
+                view.focus()
+
+        self.app.push_screen(SnippetPicker(self.host), done)
 
     # -- events --------------------------------------------------------------
 
@@ -182,6 +196,11 @@ class TerminalSection(Vertical):
             view = await self.ensure_session()
             if view is not None:
                 self.pick_credential(view)
+        elif event.button.id == "term-snippets":
+            event.stop()
+            view = await self.ensure_session()
+            if view is not None:
+                self.pick_snippet(view)
 
     def on_terminal_view_password_prompt(self, event: TerminalView.PasswordPrompt) -> None:
         event.stop()

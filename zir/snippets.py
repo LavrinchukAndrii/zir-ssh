@@ -9,13 +9,15 @@ terminal, never executed by zir: the user reviews and presses Enter.
 from __future__ import annotations
 
 import json
+import os
 import re
 import time
-from dataclasses import dataclass
+import uuid
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from .i18n import _
-from .paths import state_dir
+from .paths import config_dir, state_dir
 
 DETECT_SCRIPT = r"""
 export LC_ALL=C
@@ -307,3 +309,121 @@ def found_summary(facts: dict) -> str:
     if facts.get("wordpress"):
         parts.append("WordPress")
     return ", ".join(parts)
+
+
+# --------------------------------------------------------------------------
+# User snippets: typed in by the user, for all servers or for one of them
+# --------------------------------------------------------------------------
+
+GLOBAL = ""  # scope of the snippets shown for every server (and the Local tab)
+
+
+@dataclass
+class UserSnippet:
+    title: str
+    command: str
+    id: str = field(default_factory=lambda: uuid.uuid4().hex)
+
+
+def _user_items(raw) -> list[UserSnippet]:
+    items = []
+    for entry in raw if isinstance(raw, list) else []:
+        if not isinstance(entry, dict):
+            continue
+        title, command = entry.get("title"), entry.get("command")
+        if isinstance(title, str) and isinstance(command, str) and command:
+            items.append(UserSnippet(title, command, str(entry.get("id") or uuid.uuid4().hex)))
+    return items
+
+
+class UserSnippets:
+    """snippets.json in the config folder: {"global": [...], "hosts": {"name": [...]}}.
+
+    A scope is GLOBAL or a host name; the order of each list is the order shown.
+    """
+
+    def __init__(self, path: Path | None = None) -> None:
+        self.path = path or config_dir() / "snippets.json"
+        self.scopes: dict[str, list[UserSnippet]] = {GLOBAL: []}
+        self.load()
+
+    def load(self) -> None:
+        try:
+            data = json.loads(self.path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            data = {}
+        if not isinstance(data, dict):
+            data = {}
+        self.scopes = {GLOBAL: _user_items(data.get("global"))}
+        hosts = data.get("hosts")
+        for host, raw in (hosts.items() if isinstance(hosts, dict) else ()):
+            items = _user_items(raw)
+            if items and host:
+                self.scopes[str(host)] = items
+
+    def save(self) -> None:
+        """Raises OSError when the file cannot be written."""
+        as_dicts = lambda items: [{"id": i.id, "title": i.title, "command": i.command} for i in items]  # noqa: E731
+        data = {
+            "version": 1,
+            "global": as_dicts(self.scopes.get(GLOBAL, [])),
+            "hosts": {host: as_dicts(items) for host, items in self.scopes.items() if host != GLOBAL and items},
+        }
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        temp = self.path.with_name(self.path.name + ".tmp")
+        temp.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+        os.replace(temp, self.path)
+
+    # -- reading -----------------------------------------------------------------
+
+    def of(self, scope: str) -> list[UserSnippet]:
+        return self.scopes.get(scope, [])
+
+    def lists(self, host: str | None) -> tuple[list[UserSnippet], list[UserSnippet]]:
+        """(for all servers, only for this host)."""
+        return self.of(GLOBAL), (self.of(host) if host else [])
+
+    def find(self, snippet_id: str) -> tuple[str, UserSnippet] | None:
+        for scope, items in self.scopes.items():
+            for item in items:
+                if item.id == snippet_id:
+                    return scope, item
+        return None
+
+    # -- changing (call save() afterwards) ------------------------------------------
+
+    def add(self, scope: str, title: str, command: str) -> UserSnippet:
+        item = UserSnippet(title, command)
+        self.scopes.setdefault(scope, []).append(item)
+        return item
+
+    def update(self, snippet_id: str, title: str, command: str, scope: str) -> UserSnippet | None:
+        found = self.find(snippet_id)
+        if found is None:
+            return None
+        old_scope, item = found
+        item.title, item.command = title, command
+        if scope != old_scope:  # moved to the other list: goes to its end
+            self.scopes[old_scope].remove(item)
+            self.scopes.setdefault(scope, []).append(item)
+        return item
+
+    def delete(self, snippet_id: str) -> bool:
+        found = self.find(snippet_id)
+        if found is None:
+            return False
+        self.scopes[found[0]].remove(found[1])
+        return True
+
+    def move(self, snippet_id: str, delta: int) -> bool:
+        """Move up (-1) or down (+1) inside its own list; False at the edge."""
+        found = self.find(snippet_id)
+        if found is None:
+            return False
+        items = self.scopes[found[0]]
+        index = items.index(found[1])
+        target = index + delta
+        if not 0 <= target < len(items):
+            return False
+        items[index], items[target] = items[target], items[index]
+        return True

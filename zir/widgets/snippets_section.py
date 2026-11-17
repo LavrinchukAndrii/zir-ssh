@@ -14,13 +14,15 @@ from textual.widgets import Button, Input, Static
 
 from .. import snippets
 from ..i18n import _
+from .snippet_manager import SnippetManager
+from .snippet_picker import snippet_groups
 
 
 class SnippetsSection(Vertical):
     DEFAULT_CSS = """
     SnippetsSection { width: 1fr; height: 1fr; }
     SnippetsSection #snip-bar { height: 3; }
-    SnippetsSection #snip-check { margin-right: 1; }
+    SnippetsSection #snip-check, SnippetsSection #snip-mine { margin-right: 1; }
     SnippetsSection #snip-filter { width: 32; margin-right: 1; }
     SnippetsSection #snip-status { width: 1fr; height: 3; content-align: left middle; color: $text-muted; }
     SnippetsSection #snip-list { width: 1fr; height: 1fr; }
@@ -54,12 +56,13 @@ class SnippetsSection(Vertical):
     def compose(self) -> ComposeResult:
         with Horizontal(id="snip-bar"):
             yield Button(_("Check server"), id="snip-check", variant="primary")
+            yield Button(_("✎ My snippets…"), id="snip-mine")
             yield Input(placeholder=_("filter…"), id="snip-filter")
             yield Static(id="snip-status")
         yield VerticalScroll(id="snip-list")
 
-    def on_mount(self) -> None:
-        self._show()
+    async def on_mount(self) -> None:
+        await self._show()
 
     # -- rendering -------------------------------------------------------------
 
@@ -71,40 +74,42 @@ class SnippetsSection(Vertical):
         found = snippets.found_summary(self.data["facts"]) or "—"
         return Text.assemble(_("Checked {when}", when=when), " · ", _("found: "), (found, "bold"))
 
-    def _show(self) -> None:
-        """Rebuild the list (after loading or a check); the filter only hides rows."""
+    async def _show(self) -> None:
+        """Rebuild the list (after loading, a check or editing own snippets); the filter only hides rows."""
         self.query_one("#snip-status", Static).update(self._status())
         box = self.query_one("#snip-list", VerticalScroll)
-        box.remove_children()
+        await box.remove_children()  # the new rows reuse the ids
         self.commands = []
         self._rows = []
         self._nothing = None
-        if not self.data:
-            box.mount(Static(_("Commands appear here after the check. Insert types a command into the "
-                               "Terminal tab without running it, so you can review it first."), id="snip-empty"))
-            return
         widgets = []
-        for group in snippets.build(self.data["facts"]):
-            header = Static(group.title, classes="snip-group")
+        if not self.data:
+            widgets.append(Static(_("Commands appear here after the check. Insert types a command into the "
+                                    "Terminal tab without running it, so you can review it first."), id="snip-empty"))
+        for title, items in snippet_groups(self.host, self.data or {}):  # own snippets first, then the checked ones
+            header = Static(title, classes="snip-group")
             widgets.append(header)
-            for snippet in group.snippets:
+            for snippet_title, command in items:
                 index = len(self.commands)
-                self.commands.append(snippet.command)
-                text = Text.assemble((snippet.title, "bold"), "\n", ("$ " + snippet.command, "cyan"))
+                self.commands.append(command)
+                text = Text.assemble((snippet_title, "bold"), "\n", ("$ " + command, "cyan"))
                 row = Horizontal(
                     Static(text, classes="snip-text"),
                     Button(_("Insert"), id=f"snip-{index}", variant="success"),
                     classes="snip-row",
                 )
-                self._rows.append((row, header, f"{snippet.title}\n{snippet.command}\n{group.title}".lower()))
+                self._rows.append((row, header, f"{snippet_title}\n{command}\n{title}".lower()))
                 widgets.append(row)
+        if not self._rows:
+            await box.mount_all(widgets)
+            return
         self._nothing = Static(_("Nothing matches the filter."), classes="snip-none")
         widgets.append(self._nothing)
-        box.mount_all(widgets)
+        await box.mount_all(widgets)
         self._filter()
 
     def _filter(self) -> None:
-        if self._nothing is None:  # not checked yet: no list to filter
+        if self._nothing is None:  # nothing to filter yet
             return
         needle = self.query_one("#snip-filter", Input).value.strip().lower()
         shown: set[Static] = set()
@@ -130,6 +135,8 @@ class SnippetsSection(Vertical):
         button_id = event.button.id or ""
         if button_id == "snip-check":
             self.check()
+        elif button_id == "snip-mine":
+            self.app.push_screen(SnippetManager(self.host), lambda _result: self.call_later(self._show))
         elif button_id.startswith("snip-") and button_id[5:].isdigit():
             index = int(button_id[5:])
             if index < len(self.commands):
@@ -153,4 +160,4 @@ class SnippetsSection(Vertical):
         finally:
             button.disabled = False
         self.data = snippets.save(self.host, snippets.parse_facts(raw))
-        self._show()
+        await self._show()

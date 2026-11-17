@@ -51,15 +51,82 @@ def test_terminal_sessions_and_keys():
             await pilot.pause(0.2)
             assert app.is_running
 
-            await pilot.press("alt+t")
+            await pilot.press("ctrl+right_square_bracket", "n")  # zir menu: new session
             await pilot.pause(0.8)
             assert len(view.terminal().sessions()) == 2
-            await pilot.press("alt+w")
+            await pilot.press("ctrl+right_square_bracket", "w")  # close it
             await pilot.pause(0.3)
             assert len(view.terminal().sessions()) == 1
 
-            await pilot.press("f4")  # leave the terminal: next section
+            await pilot.press("ctrl+right_square_bracket", "right")  # leave the terminal: next section
             assert view.section == "snippets"
+            await pilot.press("f3")  # outside the terminal F3 / F4 still switch sections
+            assert view.section == "terminal"
+
+    asyncio.run(scenario())
+
+
+def test_terminal_gets_the_keys_mc_uses():
+    """F3 / F4 / F6, Alt+letters, Ctrl+N / Ctrl+Q, Ctrl+PgUp, Alt+digits go to the shell, not to zir."""
+    from zir.widgets.terminal_menu import TerminalMenu
+
+    async def scenario():
+        app = make_app()
+        async with app.run_test(size=(120, 36)) as pilot:
+            await pilot.press("alt+3")
+            view = app._active_view()
+            view.show_section("terminal")
+            await pilot.pause(0.5)
+            term = app.focused
+            assert isinstance(term, TerminalView)
+            sent: list[str] = []
+            term.write = sent.append
+            active = app.servers.active
+            await pilot.press("f3", "f4", "f6", "f13", "alt+t", "alt+w", "ctrl+n", "ctrl+q",
+                              "ctrl+pageup", "ctrl+pagedown", "alt+1", "ctrl+backslash")
+            await pilot.pause(0.2)
+            assert sent == ["\x1bOR", "\x1bOS", "\x1b[17~", "\x1b[1;2P", "\x1bt", "\x1bw", "\x0e", "\x11",
+                            "\x1b[5;5~", "\x1b[6;5~", "\x1b1", "\x1c"]
+            assert view.section == "terminal" and app.servers.active == active
+            assert len(app.screen_stack) == 1 and len(view.terminal().sessions()) == 1
+
+            await pilot.press("ctrl+right_square_bracket")  # the only key zir keeps
+            assert isinstance(app.screen, TerminalMenu)
+            await pilot.press("ctrl+right_square_bracket")  # ... and twice sends it to the shell
+            await pilot.pause(0.1)
+            assert sent[-1] == "\x1d" and app.focused is term
+
+    asyncio.run(scenario())
+
+
+def test_snippet_picker_from_the_terminal_menu():
+    from zir.snippets import GLOBAL, UserSnippets
+    from zir.widgets.snippet_picker import SnippetPicker
+
+    async def scenario():
+        app = make_app()
+        async with app.run_test(size=(120, 36)) as pilot:
+            await pilot.press("alt+3")
+            view = app._active_view()
+            view.show_section("terminal")
+            await pilot.pause(0.5)
+            term = app.focused
+            host = view.state.spec.name
+            store = UserSnippets()
+            store.add(GLOBAL, "Привіт", "echo привіт-всім")
+            store.add(host, "Only here", "echo only-$((40+2))")
+            store.add("some-other-host", "Not here", "echo elsewhere")
+            store.save()
+            await pilot.press("ctrl+right_square_bracket", "s")
+            assert await _wait_for(lambda: isinstance(app.screen, SnippetPicker))
+            picker = app.screen
+            titles = [title for title, _items in picker.groups]
+            assert titles[:2] == ["My · all servers", f"My · {host}"]
+            assert not any("elsewhere" in c for _t, items in picker.groups for _n, c in items)
+            await pilot.press(*"привіт", "enter")  # filter, then the highlighted one
+            assert await _wait_for(lambda: app.focused is term
+                                   and any("echo привіт-всім" in line for line in _lines(term)))
+            assert not any(line.strip() == "привіт-всім" for line in _lines(term))  # typed, not run
 
     asyncio.run(scenario())
 
@@ -79,15 +146,16 @@ def test_local_tab_runs_a_shell_on_this_computer(monkeypatch, tmp_path):
             await pilot.press(*'[ "$PWD" = "$HOME" ] && echo home-$((40+2))', "enter")  # starts in ~
             assert await _wait_for(lambda: any(line == "home-42" for line in _lines(term)))
 
-            await pilot.press("alt+t")
+            await pilot.press("ctrl+right_square_bracket", "n")
             await pilot.pause(0.8)
             assert len(app.local.sessions()) == 2
-            await pilot.press("alt+w")
+            await pilot.press("ctrl+right_square_bracket", "w")
             await pilot.pause(0.3)
             assert len(app.local.sessions()) == 1
 
-            await pilot.press("ctrl+w")  # typed into the shell, the tab stays
-            await pilot.press("ctrl+pagedown")
+            await pilot.press("ctrl+w", "ctrl+pagedown")  # typed into the shell, the tab stays
+            assert app.servers.active == "local-pane"
+            await pilot.press("ctrl+right_square_bracket", "right_square_bracket")  # menu: next server tab
             assert app.servers.active == "fleet-pane"
             await pilot.press("ctrl+w")
             assert app.servers.tab_count == 2 + 7

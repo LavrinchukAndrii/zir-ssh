@@ -10,7 +10,7 @@
 
 <p align="center">
   <a href="https://github.com/LavrinchukAndrii/zir-ssh/actions/workflows/tests.yml"><img src="https://github.com/LavrinchukAndrii/zir-ssh/actions/workflows/tests.yml/badge.svg" alt="Tests"></a>
-  <img src="https://img.shields.io/badge/version-0.1.0-blue" alt="Version 0.1.0">
+  <img src="https://img.shields.io/badge/version-0.2.0-blue" alt="Version 0.2.0">
   <img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="Python 3.11+">
   <img src="https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-lightgrey" alt="Platforms">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-PolyForm%20Noncommercial-orange" alt="PolyForm Noncommercial License"></a>
@@ -65,11 +65,15 @@ instantly. Nothing has to be installed on the servers.
   Private addresses (proxies, Docker) are never blamed.
 - **Processes, Disks, Network, Services, Logs.** The usual suspects, as tables.
 - **Terminal.** Real SSH sessions to the host, several at once (Alt+T / Alt+W). They reuse the
-  monitoring connection, so they open instantly. Mouse support for htop, mc, vim; drag to copy,
+  monitoring connection, so they open instantly. Every key goes to the program in the terminal
+  (F3/F4/F6 in mc, Alt+letters, Ctrl+PgUp…); only **Ctrl+]** opens the Zir SSH menu: snippets,
+  passwords, sections, sessions, tabs. Mouse support for htop, mc, vim; drag to copy,
   right click to paste. The very first tab, **Local**, is a terminal on your own computer.
 - **Snippets.** "Check server" looks at what is installed and prepares the commands that matter
   for it: nginx/Apache tests and reloads, PHP-FPM, MySQL, Docker, firewall, fail2ban, certbot,
   Laravel, WordPress… "Insert" types a command into the terminal without running it.
+  **My snippets** are your own commands, for all servers or for one: create, edit, delete and
+  reorder them; Ctrl+] → `s` (or the 📋 button) inserts any snippet right from the terminal.
 - **Identity cards.** Saved logins and passwords (F6). When the terminal asks for a password
   (`sudo`, `su -`, `Enter passphrase…`) a list pops up; picking a card types its password.
   Stored encrypted on your computer, see [Security and privacy](#security-and-privacy).
@@ -172,7 +176,7 @@ Per-host options: `title`, `target`, `port`, `identity`, `tags`, `interval`, `st
 | `Ctrl+K` | find a host by name, tag or address |
 | `Ctrl+N` / `Delete` | add a new server / remove the current one (saved in hosts.toml) |
 | `Ctrl+T` / `Ctrl+W` | open a closed host / close the current tab |
-| `[` / `]`, `F3` / `F4` | previous / next section (F3/F4 also while typing in the terminal) |
+| `[` / `]`, `F3` / `F4` | previous / next section |
 | `Alt+T` / `Alt+W` | new / close terminal session |
 | `Ctrl+R` | poll all hosts now |
 | `p` / `P` | pause this host / all hosts |
@@ -180,11 +184,12 @@ Per-host options: `title`, `target`, `port`, `identity`, `tags`, `interval`, `st
 | `d` | disable / enable a host: no SSH at all while disabled |
 | `F2` | settings: interface language, human names of the servers |
 | `F6` | identity cards: logins and passwords for the terminal |
+| `Ctrl+]` | in the terminal: Zir SSH menu (`s` snippets, `p` passwords, `n` / `w` session, ← / → section, `[` / `]` tab) |
 | `?` | help |
 | `q` | quit (asks first if some host is crit or down) |
 
-While the terminal has focus, letters and most Ctrl keys go to the shell; Ctrl+PgUp/PgDn,
-Alt+digits and F3/F4 still switch tabs. Dragging the mouse over any text copies it to the
+While the terminal has focus, every key goes to the shell, mc or vim (F-keys, Alt and Ctrl
+combinations included); only Ctrl+] opens the Zir SSH menu, pressing it twice sends Ctrl+] itself. Dragging the mouse over any text copies it to the
 clipboard (also over SSH via OSC 52); in tables Ctrl+C or `y` copies the selected row.
 
 ## Language

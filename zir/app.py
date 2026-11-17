@@ -39,6 +39,7 @@ from .widgets.settings import RESTART, TITLES, SettingsScreen
 from .snippets import DETECT_SCRIPT
 from .widgets.switcher import hosts_provider
 from .widgets.terminal import TerminalView
+from .widgets.terminal_menu import TerminalMenu
 from .widgets.terminal_section import TerminalSection
 
 LOCAL_PANE = "local-pane"  # a shell on this computer, before Fleet
@@ -57,8 +58,9 @@ KEYS = (
     ("Ctrl+N / Delete", "add a new server / remove the current one"),
     ("Ctrl+T / Ctrl+W", "open a closed host / close the current tab"),
     ("Enter (Fleet)", "open the selected host"),
-    ("[ / ]  F3 / F4", "previous / next section of the host (F3/F4 also from the terminal)"),
+    ("[ / ]  F3 / F4", "previous / next section of the host"),
     ("Alt+T / Alt+W", "new / close terminal session (Terminal section)"),
+    ("Ctrl+]", "in the terminal: Zir SSH menu (snippets, passwords, sections, tabs)"),
     ("Mouse drag", "copy the selected text (Shift+drag inside mc, htop, vim)"),
     ("Double / triple click", "copy a word / line in the terminal"),
     ("Ctrl+C / y", "copy the selected table row"),
@@ -99,7 +101,8 @@ class HelpScreen(ModalScreen[None]):
             "\n", _("Badges:"), " ", ("●", "green"), " ", _("ok"), "  ", ("▲", "yellow"), " ", _("warn"), "  ",
             ("■", "red"), " ", _("crit"), "  ", ("×", "red"), " ", _("unreachable"), "  ",
             ("·", "grey50"), " ", _("pending"), "  ", ("~", "yellow"), " ", _("stale"), "  ‖ ", _("paused"),
-            ("\n\n" + _("Alt is the Option key on a Mac. Ctrl+PgUp/PgDn work everywhere. Esc closes this window."), "grey50"),
+            ("\n\n" + _("Alt is the Option key on a Mac. While you type in the terminal, every key goes to the "
+                          "shell, mc or vim; only Ctrl+] opens the Zir SSH menu. Esc closes this window."), "grey50"),
         )
         with Vertical():
             yield Static(table)
@@ -213,6 +216,7 @@ class ZirApp(ClipboardMixin, App[str | None]):
         Binding("question_mark", "help", "Help"),
         Binding("q", "request_quit", "Quit"),
         Binding("ctrl+q", "request_quit", "Quit", show=False, priority=True),
+        Binding("ctrl+right_square_bracket", "terminal_menu", "Menu", show=False, priority=True),
         *ClipboardMixin.CLIPBOARD_BINDINGS,
     ]
 
@@ -496,12 +500,15 @@ class ZirApp(ClipboardMixin, App[str | None]):
         return order.index(active) if active in order else 0
 
     def action_next_tab(self) -> None:
+        self._keys_to_terminal()
         self._activate_index(self._current_index() + 1)
 
     def action_prev_tab(self) -> None:
+        self._keys_to_terminal()
         self._activate_index(self._current_index() - 1)
 
     def action_jump(self, number: int) -> None:
+        self._keys_to_terminal()
         if number - 1 < len(self._pane_order()):
             self._activate_index(number - 1)
 
@@ -543,9 +550,16 @@ class ZirApp(ClipboardMixin, App[str | None]):
     def _terminal_focused(self) -> bool:
         return isinstance(self.focused, TerminalView)
 
-    def action_switch_host(self) -> None:
+    def _keys_to_terminal(self) -> None:
+        """In the terminal every key belongs to the shell / mc / vim (Ctrl+] opens zir's menu)."""
         if self._terminal_focused():
-            raise SkipAction()  # Ctrl+K belongs to the shell there
+            raise SkipAction()
+
+    def action_switch_host(self) -> None:
+        self._keys_to_terminal()  # Ctrl+K belongs to the shell there
+        self.switch_host()
+
+    def switch_host(self) -> None:
         self._palette([spec.name for spec in self.specs], _("Host name, tag or address…"))
 
     def action_open_host(self) -> None:
@@ -558,11 +572,16 @@ class ZirApp(ClipboardMixin, App[str | None]):
         self._palette(closed, _("Open a host tab…"))
 
     def action_section(self, delta: int) -> None:
+        self._keys_to_terminal()  # F3 / F4 are View / Edit in mc
         view = self._active_view()
         if view is not None:
             view.cycle_section(delta)
 
     async def action_new_terminal(self) -> None:
+        self._keys_to_terminal()
+        await self.new_terminal()
+
+    async def new_terminal(self) -> None:
         section = self._active_terminal_section()
         if section is None:
             view = self._active_view()
@@ -573,6 +592,7 @@ class ZirApp(ClipboardMixin, App[str | None]):
         await section.new_session()
 
     async def action_close_terminal(self) -> None:
+        self._keys_to_terminal()
         section = self._active_terminal_section()
         if section is None:
             raise SkipAction()
@@ -723,8 +743,7 @@ class ZirApp(ClipboardMixin, App[str | None]):
         return True, " · ".join(line.strip() for line in out.splitlines() if line.strip())
 
     def action_add_host(self) -> None:
-        if self._terminal_focused():
-            raise SkipAction()  # Ctrl+N is "next history line" in the shell
+        self._keys_to_terminal()  # Ctrl+N is "next history line" in the shell
         from .sshconfig import ssh_aliases
 
         def done(spec: HostSpec | None) -> None:
@@ -816,6 +835,10 @@ class ZirApp(ClipboardMixin, App[str | None]):
         self.push_screen(SettingsScreen(self.settings, self.config_path, hosts), done)
 
     def action_credentials(self) -> None:
+        self._keys_to_terminal()  # F6 is Rename/Move in mc
+        self.open_credentials()
+
+    def open_credentials(self) -> None:
         if isinstance(self.screen, CredentialManager):
             return
         self.push_screen(CredentialManager(self.vault), lambda _result: self._refocus_terminal())
@@ -827,10 +850,48 @@ class ZirApp(ClipboardMixin, App[str | None]):
             if terminal is not None:
                 terminal.focus()
 
+    # ------------------------------------------------------------------
+    # Ctrl+] in the terminal
+    # ------------------------------------------------------------------
+
+    def action_terminal_menu(self) -> None:
+        if not self._terminal_focused():
+            raise SkipAction()  # e.g. inside the menu itself: "send Ctrl+]"
+        terminal = self.focused
+        section = next((a for a in terminal.ancestors if isinstance(a, TerminalSection)), None)
+        if section is None:
+            raise SkipAction()
+        self.push_screen(TerminalMenu(local=section is self.local),
+                         lambda choice: self.call_later(self._menu_chosen, choice, section, terminal))
+
+    async def _menu_chosen(self, choice: str | None, section: TerminalSection, terminal: TerminalView) -> None:
+        if choice == "snippets":
+            section.pick_snippet(terminal)
+        elif choice == "passwords":
+            section.pick_credential(terminal)
+        elif choice == "new":
+            await section.new_session()
+        elif choice == "close":
+            await section.close_session()
+        elif choice in ("section-1", "section+1"):
+            view = self._active_view()
+            if view is not None:
+                view.cycle_section(-1 if choice == "section-1" else 1)
+        elif choice in ("tab-1", "tab+1"):
+            self._activate_index(self._current_index() + (-1 if choice == "tab-1" else 1))
+        elif choice == "switch":
+            self.switch_host()
+        elif choice == "send":
+            terminal.write("\x1d")
+            terminal.focus()
+        else:
+            terminal.focus()
+
     def action_help(self) -> None:
         self.push_screen(HelpScreen())
 
     def action_request_quit(self) -> None:
+        self._keys_to_terminal()  # Ctrl+Q is "quote next key" in mc
         bad = [state.label for state in self.store if state.level in BAD_LEVELS]
         self.push_screen(ConfirmQuit(bad), lambda quit_: self.exit() if quit_ else None)
 

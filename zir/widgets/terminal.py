@@ -49,13 +49,19 @@ PASSWORD_PROMPT = re.compile(r"(password|passphrase|пароль|парольн�
 
 KEYS = {
     "enter": "\r", "tab": "\t", "shift+tab": "\x1b[Z", "backspace": "\x7f", "escape": "\x1b",
-    "delete": "\x1b[3~", "insert": "\x1b[2~", "home": "\x1b[H", "end": "\x1b[F",
-    "pageup": "\x1b[5~", "pagedown": "\x1b[6~",
-    "f1": "\x1bOP", "f2": "\x1bOQ", "f5": "\x1b[15~", "f6": "\x1b[17~", "f7": "\x1b[18~",
-    "f8": "\x1b[19~", "f9": "\x1b[20~", "f10": "\x1b[21~", "f11": "\x1b[23~", "f12": "\x1b[24~",
-    "ctrl+left": "\x1b[1;5D", "ctrl+right": "\x1b[1;5C", "space": " ", "ctrl+space": "\x00",
+    "space": " ", "ctrl+space": "\x00", "ctrl+@": "\x00",
+    "ctrl+backslash": "\x1c", "ctrl+circumflex_accent": "\x1e", "ctrl+underscore": "\x1f",
+    "ctrl+tab": "\t", "ctrl+shift+tab": "\x1b[Z", "alt+enter": "\x1b\r", "alt+backspace": "\x1b\x7f",
 }
+# Keys with xterm modifier variants: "\x1b[1;<mod>X" or "\x1b[<n>;<mod>~".
+CURSOR_KEYS = {"up": "A", "down": "B", "right": "C", "left": "D", "home": "H", "end": "F"}
+TILDE_KEYS = {"insert": 2, "delete": 3, "pageup": 5, "pagedown": 6, "f5": 15, "f6": 17, "f7": 18,
+              "f8": 19, "f9": 20, "f10": 21, "f11": 23, "f12": 24}
+SS3_KEYS = {"f1": "P", "f2": "Q", "f3": "R", "f4": "S"}
+MODIFIERS = {"shift": 1, "alt": 2, "ctrl": 4}
 ARROWS = {"up": "A", "down": "B", "right": "C", "left": "D"}
+# Ctrl+] opens zir's menu from the terminal; every other key goes to the shell / mc.
+MENU_KEY = "ctrl+right_square_bracket"
 # Classic xterm palette as explicit RGB: named ANSI colours would be remapped by
 # Textual's own ANSI theme (Monokai turns blue into violet, e.g. mc panels).
 COLORS = {
@@ -154,16 +160,44 @@ def encode_mouse(button: int, x: int, y: int, press: bool, sgr: bool) -> str:
     return "\x1b[M" + chr(32 + code) + chr(32 + min(x + 1, 223)) + chr(32 + min(y + 1, 223))
 
 
+def _special_key(key: str, app_cursor: bool) -> str | None:
+    """Cursor, editing and function keys, with xterm modifier codes (mc, vim, htop)."""
+    *mods, base = key.split("+")
+    if base.startswith("f") and base[1:].isdigit() and 13 <= int(base[1:]) <= 24:
+        mods, base = [*mods, "shift"], f"f{int(base[1:]) - 12}"  # Textual names Shift+F1..F12 F13..F24
+    if any(m not in MODIFIERS for m in mods):
+        return None
+    code = 1 + sum(MODIFIERS[m] for m in set(mods))
+    if base in CURSOR_KEYS:
+        if code > 1:
+            return f"\x1b[1;{code}{CURSOR_KEYS[base]}"
+        if base in ARROWS:
+            return ("\x1bO" if app_cursor else "\x1b[") + CURSOR_KEYS[base]
+        return "\x1b[" + CURSOR_KEYS[base]
+    if base in SS3_KEYS:
+        return f"\x1b[1;{code}{SS3_KEYS[base]}" if code > 1 else "\x1bO" + SS3_KEYS[base]
+    if base in TILDE_KEYS:
+        return f"\x1b[{TILDE_KEYS[base]};{code}~" if code > 1 else f"\x1b[{TILDE_KEYS[base]}~"
+    return None
+
+
 def encode_key(event: events.Key, app_cursor: bool) -> str | None:
     key = event.key
-    if key in ARROWS:
-        return ("\x1bO" if app_cursor else "\x1b[") + ARROWS[key]
+    if key == MENU_KEY:
+        return None  # zir's own menu, the only key the terminal does not get
     if key in KEYS:
         return KEYS[key]
+    special = _special_key(key, app_cursor)
+    if special is not None:
+        return special
     if key.startswith("ctrl+") and len(key) == 6 and key[5].isalpha():
         return chr(ord(key[5]) - 96)
-    if key.startswith("alt+") and event.character:
-        return "\x1b" + event.character[-1]
+    if key.startswith("alt+"):  # Esc + the key (mc: Alt+T listing mode, Alt+O, …; bash: Alt+B / Alt+F)
+        rest = key[4:]
+        char = event.character[-1] if event.character else (rest if len(rest) == 1 else None)
+        if char is None and rest.startswith("shift+") and len(rest) == 7:
+            char = rest[6].upper()
+        return "\x1b" + char if char else None
     if event.character and event.is_printable:
         return event.character
     return None

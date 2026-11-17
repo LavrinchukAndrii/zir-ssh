@@ -41,6 +41,7 @@ def _dynamic_strings() -> set[str]:
     from zir.widgets.fleet_view import COLUMNS
     from zir.widgets.host_view import SECTIONS
     from zir.widgets.stack_sections import GROUP_LABELS, STACK_COLUMNS
+    from zir.widgets.terminal_menu import ITEMS
     from zir.widgets.terminal_section import HINTS
 
     host_columns = (
@@ -52,7 +53,8 @@ def _dynamic_strings() -> set[str]:
     return (
         {label for _key, label in COLUMNS if label}
         | {what for _key, what in KEYS} | {"Mouse drag", "Double / triple click"}
-        | {text for pair in HINTS for text in pair} - {"Alt+T", "Alt+W", "F6", "F3/F4"}
+        | {text for pair in HINTS for text in pair} - {"Ctrl+]"}
+        | {label for *_rest, label in ITEMS}
         | set(host_columns) | set(report_columns) | set(levels)
         | {label for tables in STACK_COLUMNS.values() for labels in tables.values() for label in labels}
         | set(GROUP_LABELS.values()) - {"PHP", "FTP", "DNS"}
