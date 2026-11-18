@@ -60,9 +60,9 @@ def test_terminal_sessions_and_keys():
             await pilot.pause(0.3)
             assert len(view.terminal().sessions()) == 1
 
-            await pilot.press("ctrl+right_square_bracket", "right")  # leave the terminal: next section
-            assert view.section == "snippets"
-            await pilot.press("f3")  # outside the terminal F3 / F4 still switch sections
+            await pilot.press("ctrl+right_square_bracket", "left")  # leave the terminal: previous section
+            assert view.section == "logs"
+            await pilot.press("f4")  # outside the terminal F3 / F4 still switch sections
             assert view.section == "terminal"
 
     asyncio.run(scenario())

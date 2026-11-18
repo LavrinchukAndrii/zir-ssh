@@ -10,7 +10,7 @@
 
 <p align="center">
   <a href="https://github.com/LavrinchukAndrii/zir-ssh/actions/workflows/tests.yml"><img src="https://github.com/LavrinchukAndrii/zir-ssh/actions/workflows/tests.yml/badge.svg" alt="Tests"></a>
-  <img src="https://img.shields.io/badge/version-0.2.1-blue" alt="Version 0.2.1">
+  <img src="https://img.shields.io/badge/version-0.3.0-blue" alt="Version 0.3.0">
   <img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="Python 3.11+">
   <img src="https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-lightgrey" alt="Platforms">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-PolyForm%20Noncommercial-orange" alt="PolyForm Noncommercial License"></a>
@@ -69,6 +69,14 @@ instantly. Nothing has to be installed on the servers.
   (F3/F4/F6 in mc, Alt+letters, Ctrl+PgUp…); only **Ctrl+]** opens the Zir SSH menu: snippets,
   passwords, sections, sessions, tabs. Mouse support for htop, mc, vim; drag to copy,
   right click to paste. The very first tab, **Local**, is a terminal on your own computer.
+- **Files.** A two-panel file manager in the spirit of Midnight Commander: your computer on the
+  left, the server on the right. Copy (F5) and move (F6) files and whole folders both ways, with a
+  question for every file that already exists (overwrite, skip, overwrite all, skip all, only older
+  ones) and a progress window with speed and Cancel. View (F3) and edit (F4) text files, rename (F2),
+  new folder (F7), delete (F8), Ins / `+` / `-` / `*` to mark files, type letters to jump to a name,
+  click a column to sort. **F9 Run as** opens the server panel as another user through `su -`, with
+  the password from an identity card (for example root), so you can work with files your SSH user
+  cannot touch. Works on macOS, Linux and Windows; the server needs only `sh`, `stat`, `find` and `tar`.
 - **Snippets.** "Check server" looks at what is installed and prepares the commands that matter
   for it: nginx/Apache tests and reloads, PHP-FPM, MySQL, Docker, firewall, fail2ban, certbot,
   Laravel, WordPress… "Insert" types a command into the terminal without running it.
@@ -180,6 +188,9 @@ Per-host options: `title`, `target`, `port`, `identity`, `tags`, `interval`, `st
 | `Ctrl+T` / `Ctrl+W` | open a closed host / close the current tab |
 | `[` / `]`, `F3` / `F4` | previous / next section |
 | `Alt+T` / `Alt+W` | new / close terminal session |
+| `F3` `F4` `F5` `F6` `F7` `F8` | Files: view / edit / copy / move / new folder / delete |
+| `F2` / `F9` / `Tab` | Files: rename / open the server as another user (`su -`) / other panel |
+| `Ins`, `+`, `-`, `*` | Files: mark a file, mark / unmark by mask, invert |
 | `Ctrl+R` | poll all hosts now |
 | `p` / `P` | pause this host / all hosts |
 | `a` | add your SSH key to the host (asks for its password once) |
@@ -189,6 +200,9 @@ Per-host options: `title`, `target`, `port`, `identity`, `tags`, `interval`, `st
 | `Ctrl+]` | in the terminal: Zir SSH menu (`s` snippets, `p` passwords, `n` / `w` session, ← / → section, `[` / `]` tab) |
 | `?` | help |
 | `q` | quit (asks first if some host is crit or down) |
+
+In the Files panels F2..F9 and Ctrl+R are file commands, as in mc; Backspace or ← goes up a folder,
+Enter or → opens one, Ctrl+G jumps to a typed path.
 
 While the terminal has focus, every key goes to the shell, mc or vim (F-keys, Alt and Ctrl
 combinations included); only Ctrl+] opens the Zir SSH menu, pressing it twice sends Ctrl+] itself. Dragging the mouse over any text copies it to the
@@ -207,7 +221,8 @@ first-run screen); the choice is saved to `~/.config/zir/prefs.json`. One-off: `
   `systemctl show`, log tails, `SHOW STATUS`). Commands in the terminal are the ones you type;
   snippets are only typed, never run.
 - **It writes to a server only when you ask it to:** your public key into
-  `~/.ssh/authorized_keys` (after you enter the server password), and `~/.my.cnf` with mode 0600
+  `~/.ssh/authorized_keys` (after you enter the server password), files you copy, edit, rename or
+  delete in the Files section (deleting always asks first), and `~/.my.cnf` with mode 0600
   when you set up database access (after the login is checked with `SELECT 1`; an existing file is
   backed up first).
 - **No agents, no telemetry.** It talks to nothing but your servers, using your system `ssh`.

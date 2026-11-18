@@ -38,6 +38,8 @@ def _source_strings() -> tuple[set[str], set[str]]:
 def _dynamic_strings() -> set[str]:
     """Strings translated through a variable: columns, states, help lines."""
     from zir.app import KEYS
+    from zir.widgets.file_dialogs import OVERWRITE_ANSWERS
+    from zir.widgets.files_section import KEY_BAR
     from zir.widgets.fleet_view import COLUMNS
     from zir.widgets.host_view import SECTIONS
     from zir.widgets.stack_sections import GROUP_LABELS, STACK_COLUMNS
@@ -60,6 +62,8 @@ def _dynamic_strings() -> set[str]:
         | set(GROUP_LABELS.values()) - {"PHP", "FTP", "DNS"}
         | {"SERVICE", "RUNNING FOR", "MEMORY", "RESTARTS", "AUTOSTART"}
         | {title for _key, title in SECTIONS if title != "PHP"}
+        | {label for _key, label, _action in KEY_BAR}
+        | {label for _answer, label, _key in OVERWRITE_ANSWERS}
     )
 
 

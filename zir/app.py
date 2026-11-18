@@ -42,6 +42,8 @@ from .widgets.switcher import hosts_provider
 from .widgets.terminal import TerminalView
 from .widgets.terminal_menu import TerminalMenu
 from .widgets.terminal_section import TerminalSection
+from .widgets.files_section import FileTable
+from .filesystems import FileSystem, server_files
 
 LOCAL_PANE = "local-pane"  # a shell on this computer, before Fleet
 FLEET_PANE = "fleet-pane"
@@ -61,6 +63,8 @@ KEYS = (
     ("Enter (Fleet)", "open the selected host"),
     ("[ / ]  F3 / F4", "previous / next section of the host"),
     ("Alt+T / Alt+W", "new / close terminal session (Terminal section)"),
+    ("F3 F4 F5 F6 F7 F8", "Files: view / edit / copy / move / new folder / delete"),
+    ("Tab / Ins / F9", "Files: other panel / mark a file / open as another user (su)"),
     ("Ctrl+]", "in the terminal: Zir SSH menu (snippets, passwords, sections, tabs)"),
     ("Mouse drag", "copy the selected text (Shift+drag inside mc, htop, vim)"),
     ("Double / triple click", "copy a word / line in the terminal"),
@@ -204,8 +208,8 @@ class ZirApp(ClipboardMixin, App[str | None]):
         Binding("ctrl+r", "refresh_now", "Refresh", priority=True),
         Binding("left_square_bracket", "section(-1)", "Section", show=False),
         Binding("right_square_bracket", "section(1)", "Section", show=False),
-        Binding("f3", "section(-1)", "Section", show=False, priority=True),
-        Binding("f4", "section(1)", "Section", show=False, priority=True),
+        Binding("f3", "fkey_section(-1)", "Section", show=False, priority=True),
+        Binding("f4", "fkey_section(1)", "Section", show=False, priority=True),
         Binding("alt+t,dagger", "new_terminal", "Terminal", show=False, priority=True),
         Binding("alt+w,n_ary_summation", "close_terminal", "Terminal", show=False, priority=True),
         Binding("p", "pause_host", "Pause"),
@@ -296,6 +300,9 @@ class ZirApp(ClipboardMixin, App[str | None]):
         async def check() -> str:
             return await collector.run_script(DETECT_SCRIPT)
 
+        def files() -> FileSystem:
+            return server_files(state.spec, collector, self.settings.connect_timeout)
+
         view = HostView(
             state,
             self.session.sections.get(name),
@@ -304,6 +311,7 @@ class ZirApp(ClipboardMixin, App[str | None]):
                 else interactive_command(state.spec, self.settings.connect_timeout)
             ),
             check_runner=check,
+            files=files,
         )
         return TabPane(tab_label(state, time.time(), self.interval_of(name)), view, id=self.pane_ids[name])
 
@@ -572,6 +580,15 @@ class ZirApp(ClipboardMixin, App[str | None]):
             return
         self._palette(closed, _("Open a host tab…"))
 
+    def _keys_to_files(self) -> None:
+        """In a Files panel F3..F9 and Ctrl+R are file commands, as in mc."""
+        if isinstance(self.focused, FileTable):
+            raise SkipAction()
+
+    def action_fkey_section(self, delta: int) -> None:
+        self._keys_to_files()
+        self.action_section(delta)
+
     def action_section(self, delta: int) -> None:
         self._keys_to_terminal()  # F3 / F4 are View / Edit in mc
         view = self._active_view()
@@ -606,6 +623,7 @@ class ZirApp(ClipboardMixin, App[str | None]):
     def action_refresh_now(self) -> None:
         if self._terminal_focused():
             raise SkipAction()
+        self._keys_to_files()
         for name, worker in self.workers_by_host.items():
             if not self.store[name].paused:
                 worker.poke()
@@ -837,6 +855,7 @@ class ZirApp(ClipboardMixin, App[str | None]):
 
     def action_credentials(self) -> None:
         self._keys_to_terminal()  # F6 is Rename/Move in mc
+        self._keys_to_files()
         self.open_credentials()
 
     def open_credentials(self) -> None:

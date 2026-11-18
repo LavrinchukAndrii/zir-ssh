@@ -112,6 +112,42 @@ def interactive_command(spec: HostSpec, connect_timeout: int = 8) -> list[str]:
     return command + [spec.target]
 
 
+def ssh_command(spec: HostSpec, connect_timeout: int = 5, tty: bool = False) -> list[str]:
+    """`ssh` with the options of the polling connection, without the target.
+
+    Shares the polling connection (ControlMaster) where OpenSSH supports it;
+    `tty` forces a remote terminal (needed for `su`, which reads its password there)."""
+    ssh = shutil.which("ssh")
+    if ssh is None:
+        raise ProbeError(
+            _("ssh client not found in PATH"),
+            _("Install OpenSSH Client (Windows: Settings → Optional features)."),
+        )
+    command = [
+        ssh,
+        "-tt" if tty else "-T",
+        "-o", "BatchMode=yes",
+        "-o", f"ConnectTimeout={connect_timeout}",
+        "-o", "ServerAliveInterval=10",
+        "-o", "ServerAliveCountMax=2",
+    ]
+    # Windows OpenSSH has no connection multiplexing (ControlMaster).
+    if sys.platform != "win32":
+        command += [
+            "-o", "ControlMaster=auto",
+            "-o", f"ControlPath={_cache_dir()}/%C",
+            "-o", f"ControlPersist={CONTROL_PERSIST}",
+        ]
+    command += ["-o", "LogLevel=ERROR", "-o", f"StrictHostKeyChecking={spec.strict_host_key}"]
+    for option in spec.ssh_options:
+        command += ["-o", option]
+    if spec.port:
+        command += ["-p", str(spec.port)]
+    if spec.identity:
+        command += ["-i", os.path.expanduser(spec.identity)]
+    return command
+
+
 @dataclass
 class HostReading:
     spec: HostSpec
@@ -150,50 +186,7 @@ class Collector:
     def _build_command(self) -> list[str]:
         if self.spec.local:
             return ["bash", "-s"]
-
-        ssh = shutil.which("ssh")
-        if ssh is None:
-            raise ProbeError(
-                _("ssh client not found in PATH"),
-                _("Install OpenSSH Client (Windows: Settings → Optional features)."),
-            )
-
-        command = [
-            ssh,
-            "-T",
-            "-o",
-            "BatchMode=yes",
-            "-o",
-            f"ConnectTimeout={self.connect_timeout}",
-            "-o",
-            "ServerAliveInterval=10",
-            "-o",
-            "ServerAliveCountMax=2",
-        ]
-        # Windows OpenSSH has no connection multiplexing (ControlMaster).
-        if sys.platform != "win32":
-            command += [
-                "-o",
-                "ControlMaster=auto",
-                "-o",
-                f"ControlPath={_cache_dir()}/%C",
-                "-o",
-                f"ControlPersist={CONTROL_PERSIST}",
-            ]
-        command += [
-            "-o",
-            "LogLevel=ERROR",
-            "-o",
-            f"StrictHostKeyChecking={self.spec.strict_host_key}",
-        ]
-        for option in self.spec.ssh_options:
-            command += ["-o", option]
-        if self.spec.port:
-            command += ["-p", str(self.spec.port)]
-        if self.spec.identity:
-            command += ["-i", os.path.expanduser(self.spec.identity)]
-        command += [self.spec.target, "bash -s"]
-        return command
+        return ssh_command(self.spec, self.connect_timeout) + [self.spec.target, "bash -s"]
 
     @staticmethod
     async def _stop(process: asyncio.subprocess.Process) -> None:

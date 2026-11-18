@@ -1,4 +1,5 @@
-"""One host tab: Overview, Web, Database, PHP, Attacks, Processes, Disks, Network, Services, Logs.
+"""One host tab: Overview, Web, Database, PHP, Attacks, Processes, Disks, Network, Services, Logs,
+Terminal, Files, Snippets.
 
 Everything is sized in fr/% so the view fills the terminal and follows resizes;
 bars and truncation are computed from the current width.
@@ -31,6 +32,8 @@ from ..i18n import _, _n
 from ..probes import Finding
 from ..store import HostState
 from .chart import Chart
+from ..filesystems import LocalFS
+from .files_section import FilesSection
 from .snippets_section import SnippetsSection
 from .stack_sections import STACK_COLUMNS, STACK_CSS, StackSections, service_state_text, services_panel, short_rate
 from .tables import fill
@@ -48,10 +51,11 @@ SECTIONS = (
     ("services", "Services"),
     ("logs", "Logs"),
     ("terminal", "Terminal"),
+    ("files", "Files"),
     ("snippets", "Snippets"),
 )
 # Sections that work without monitoring data (host down, disabled, still connecting).
-TOOL_SECTIONS = {"terminal", "snippets"}
+TOOL_SECTIONS = {"terminal", "files", "snippets"}
 NARROW = 100
 TABLE_COLUMNS = {  # section -> table -> column labels
     "procs": {"#procs-table": ("PID", "USER", "CPU%", "MEM%", "RSS", "TIME", "STAT", "COMMAND")},
@@ -196,9 +200,11 @@ class HostView(StackSections, Vertical):
         section: str | None = None,
         terminal_command: list[str] | None = None,
         check_runner=None,
+        files=None,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
+        self.files = files  # () -> the server's FileSystem (raises FsError / ProbeError)
         self.state = state
         self.terminal_command = terminal_command or ["ssh", state.spec.target]
         self.check_runner = check_runner
@@ -240,6 +246,8 @@ class HostView(StackSections, Vertical):
                 yield from self._initial("logs")
             with TabPane(_("Terminal"), id="sec-terminal"):
                 yield from self._initial("terminal")
+            with TabPane(_("Files"), id="sec-files"):
+                yield from self._initial("files")
             with TabPane(_("Snippets"), id="sec-snippets"):
                 yield from self._initial("snippets")
 
@@ -295,8 +303,18 @@ class HostView(StackSections, Vertical):
             yield RichLog(id="log-view", markup=False, wrap=True)
         elif section == "terminal":
             yield TerminalSection(self.terminal_command, host=self.state.spec.name, id="terminal")
+        elif section == "files":
+            yield self._files_section()
         elif section == "snippets":
             yield SnippetsSection(self.state.spec.name, self.check_runner, id="snippets")
+
+    def _files_section(self) -> FilesSection:
+        remote, error = None, ""
+        try:
+            remote = self.files() if self.files is not None else LocalFS(self.state.spec.name)
+        except Exception as exc:  # noqa: BLE001 - e.g. no ssh client: shown in the panel
+            error = str(exc)
+        return FilesSection(LocalFS(), remote, error, id="files")
 
     def _add_columns(self, section: str) -> None:
         for selector, labels in {**TABLE_COLUMNS.get(section, {}), **STACK_COLUMNS.get(section, {})}.items():
@@ -361,6 +379,8 @@ class HostView(StackSections, Vertical):
             await building
         if section == "terminal" and self.section == "terminal":
             self.call_later(self._q(TerminalSection).ensure_session)
+        if section == "files" and self.section == "files":
+            self.call_later(self._q(FilesSection).focus_active)
         self.refresh_data(force=True)  # only the visible section is kept up to date
 
     async def on_snippets_section_insert(self, event: SnippetsSection.Insert) -> None:

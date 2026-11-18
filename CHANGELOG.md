@@ -6,6 +6,21 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-18
+
+### Added
+
+- **Files** section next to Terminal: a two-panel file manager like mc, this computer on the left and
+  the server on the right. Copy (F5) and move (F6) files and folders with everything inside, both
+  ways; for files that already exist it asks: overwrite, skip, overwrite all, skip all or overwrite
+  only older ones. A progress window shows the current file, speed and remaining time and can be
+  cancelled. View (F3), edit (F4, Ctrl+S saves), rename (F2), new folder (F7), delete (F8, asks
+  first), mark with Ins / Space, `+` / `-` by mask, `*` to invert, type to jump to a name, sort by a
+  column click, Ctrl+G to go to a path. Windows shows the drives above `C:\`.
+- **F9 Run as** in the Files section: the server panel works as another user through `su -`, with the
+  password of an identity card (for example root); its login is the user name. The panel header
+  shows who you are, in red for root.
+
 ## [0.2.1] - 2026-11-17
 
 ### Fixed
