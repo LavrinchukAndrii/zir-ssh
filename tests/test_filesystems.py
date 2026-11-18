@@ -29,7 +29,7 @@ def _tree(root: Path) -> None:
     (root / "site" / "css" / "main.css").write_text("body{}")
     (root / "site" / "empty").mkdir()
     (root / "notes.txt").write_text("hello\n")
-    (root / "Файл з пробілом.txt").write_text("юнікод")
+    (root / "Файл з пробілом.txt").write_text("юнікод", encoding="utf-8")
 
 
 def _progress_counter():
@@ -155,7 +155,7 @@ def test_upload_and_download_round_trip(tmp_path):
                         threading.Event())
     assert not errors
     assert (server_dir / "site" / "big.bin").read_bytes() == big.read_bytes()
-    assert (server_dir / "Файл з пробілом.txt").read_text() == "юнікод"
+    assert (server_dir / "Файл з пробілом.txt").read_text(encoding="utf-8") == "юнікод"
     assert os.readlink(server_dir / "site" / "home.html") == "index.html"
     assert stat.S_IMODE((server_dir / "site" / "run.sh").stat().st_mode) & 0o100
     assert sum(n for n, _name in seen) >= 700_000
