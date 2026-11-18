@@ -371,7 +371,7 @@ class LocalFS(FileSystem):
         errors: list[str] = []
         folders: list[tuple[str, float, int]] = []
         root = os.path.abspath(folder)
-        with tarfile.open(fileobj=stream, mode="r|*", encoding="utf-8", errors="surrogateescape") as tar:
+        with tarfile.open(fileobj=stream, mode="r|", encoding="utf-8", errors="surrogateescape") as tar:
             for member in tar:
                 if cancel.is_set():
                     raise Cancelled()

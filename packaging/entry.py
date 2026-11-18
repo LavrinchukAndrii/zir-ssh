@@ -25,6 +25,8 @@ if __name__ == "__main__":
         started_in_legacy_console,
     )
 
+    if os.environ.get("ZIR_SELF_TEST") == "1":  # the build's UI check: no windows, no Terminal
+        raise SystemExit(main())
     if started_from_app_bundle() and len(sys.argv) == 1:
         code = open_own_window()
         raise SystemExit(reopen_in_terminal() if code is None else code)

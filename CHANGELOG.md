@@ -6,6 +6,14 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-11-18
+
+### Fixed
+
+- The 0.3.0 downloads did not start ("No module named 'tarfile'"): the single-file build left out
+  modules the new Files section needs (tar for copying, the text area of the viewer). Every build now
+  starts the UI without a screen (`ZIR_SELF_TEST=1`) before it is published.
+
 ## [0.3.0] - 2026-11-18
 
 ### Added

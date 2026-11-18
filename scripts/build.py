@@ -74,6 +74,13 @@ def smoke_test(binary: Path) -> None:
     if not hosts:
         raise SystemExit("smoke test failed: empty report")
     print(f"smoke test ok: {len(hosts)} demo host(s)")
+    # The UI itself, without a screen: catches modules missing from the binary.
+    result = subprocess.run([str(binary)], capture_output=True, text=True, timeout=180,
+                            env={**os.environ, "ZIR_SELF_TEST": "1"})
+    if result.returncode != 0 or "self test ok" not in result.stdout:
+        sys.stderr.write(result.stdout[-4000:] + result.stderr[-4000:])
+        raise SystemExit(f"UI self test failed: exit code {result.returncode}")
+    print("UI self test ok")
 
 
 def pyinstaller(python: Path, mode: str, distpath: Path, name: str) -> None:

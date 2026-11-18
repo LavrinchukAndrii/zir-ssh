@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
 import sys
 from dataclasses import asdict, replace
 from pathlib import Path
@@ -396,6 +397,10 @@ def main(argv: list[str] | None = None) -> int:
 
     if argv is None and answer_askpass():
         return 0
+    if os.environ.get("ZIR_SELF_TEST") == "1":  # the build checks the binary with this
+        from .selftest import run
+
+        return run()
     migrate_legacy()
     adapt_textual()  # the classic Windows console lacks Textual's border glyphs
     raw_args = argv if argv is not None else sys.argv[1:]

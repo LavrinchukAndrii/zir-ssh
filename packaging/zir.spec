@@ -35,10 +35,10 @@ excludes = [
     "tkinter", "PyInstaller", "PIL",
     "markdown_it", "mdit_py_plugins", "linkify_it", "rich.markdown", "pydoc", "pydoc_data",
     "textual._markup_playground", "textual.widgets._markdown", "textual.widgets.markdown",
-    "textual.widgets._text_area", "textual.widgets.text_area", "textual.widgets._help_panel",
+    "textual.widgets._help_panel",  # TextArea stays: the Files viewer / editor (F3 / F4)
     # Standard library parts nothing in zir reaches.
     "multiprocessing", "concurrent.futures.process", "xmlrpc",
-    "tarfile", "lzma", "_lzma", "bz2", "_bz2", "_zstd", "compression.zstd",
+    "lzma", "_lzma", "bz2", "_bz2", "_zstd", "compression.zstd",  # tarfile stays: Files copies through tar
     "statistics",  # fractions / decimal stay: rich uses them
     "_codecs_jp", "_codecs_cn", "_codecs_kr", "_codecs_tw", "_codecs_hk", "_codecs_iso2022",
     "_multibytecodec", "pygments.formatters",
