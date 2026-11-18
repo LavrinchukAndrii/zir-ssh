@@ -14,7 +14,9 @@ and the project uses [Semantic Versioning](https://semver.org/).
   modules the new Files section needs (tar for copying, the text area of the viewer). Every build now
   starts the UI without a screen (`ZIR_SELF_TEST=1`) before it is published.
 
-## [0.3.0] - 2026-11-18
+## [0.3.0] - 2026-11-18 [YANKED]
+
+Withdrawn: the downloads did not start (fixed in 0.3.1, which has everything listed here).
 
 ### Added
 
