@@ -28,7 +28,7 @@ def _tree(root: Path) -> None:
     (root / "site" / "index.html").write_text("<h1>hi</h1>")
     (root / "site" / "css" / "main.css").write_text("body{}")
     (root / "site" / "empty").mkdir()
-    (root / "notes.txt").write_text("hello\n")
+    (root / "notes.txt").write_bytes(b"hello\n")
     (root / "Файл з пробілом.txt").write_text("юнікод", encoding="utf-8")
 
 
